@@ -10,7 +10,7 @@ public final class Sinus extends Element {
     public static final double tEchantillon = 0.010;
     private double frequence;
 
-    public Sinus(Dataset time, Dataset dataset, double duration, double amplitude, double frequence, double nbCycle) {
+    public Sinus(Dataset time, Dataset dataset, double amplitude, double frequence, double nbCycle) {
 
         this.amplitude = amplitude;
         this.frequence = frequence;

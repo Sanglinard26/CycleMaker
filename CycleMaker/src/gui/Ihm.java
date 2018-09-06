@@ -201,15 +201,21 @@ public final class Ihm extends JFrame implements Observateur {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                designMode = btDesign.isSelected();
-                panelCreation.setVisible(designMode);
+            	if(listCycle.getSelectedValue() != null)
+            	{
+            		designMode = btDesign.isSelected();
+                    panelCreation.setVisible(designMode);
 
-                btPoint.setEnabled(designMode);
-                btCreneau.setEnabled(designMode);
-                btStationnaire.setEnabled(designMode);
-                btRampe.setEnabled(designMode);
-                btSinus.setEnabled(designMode);
-                btTrapeze.setEnabled(designMode);
+                    btPoint.setEnabled(designMode);
+                    btCreneau.setEnabled(designMode);
+                    btStationnaire.setEnabled(designMode);
+                    btRampe.setEnabled(designMode);
+                    btSinus.setEnabled(designMode);
+                    btTrapeze.setEnabled(designMode);
+            	}else{
+            		btDesign.setSelected(false);
+            	}
+                
 
             }
         });
@@ -264,7 +270,9 @@ public final class Ihm extends JFrame implements Observateur {
         @Override
         public void actionPerformed(ActionEvent e) {
 
-            final Cycle cycle = new Cycle("Test cycle");
+        	String cycleName = JOptionPane.showInputDialog(Ihm.this, "Nom du cycle", "Nouveau_cycle");
+        	
+            final Cycle cycle = new Cycle(cycleName);
             cycle.addObservateur(Ihm.this);
             dataModel.addElement(cycle);
 
