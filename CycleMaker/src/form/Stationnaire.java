@@ -7,7 +7,7 @@ import form.Cycle.Dataset;
 
 public final class Stationnaire extends Element {
 
-    public Stationnaire(Dataset time, Dataset dataset, double duration, double amplitude) {
+    public Stationnaire(Dataset time, Dataset dataset, double duration) {
 
         this.duration = duration;
         this.amplitude = 0;

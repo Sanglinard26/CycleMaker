@@ -19,6 +19,8 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
 import form.Creneau;
@@ -43,6 +45,7 @@ public final class PanelCreation extends JPanel {
     private final DefaultListModel<Element> dataModel;
     private final JComboBox<Dataset> comboBox;
     private final DefaultComboBoxModel<Dataset> comboBoxModel;
+    private final JTextField txtDuration, txtAmplitude, txtTpsRampe;
 
     private Cycle cycle;
     private String selectedForm;
@@ -51,7 +54,7 @@ public final class PanelCreation extends JPanel {
 
         setLayout(new GridBagLayout());
         setBorder(BorderFactory.createTitledBorder("Creation"));
-        setPreferredSize(new Dimension(300, 0));
+        setPreferredSize(new Dimension(400, 0));
 
         labelType = new JLabel("Type : ");
         gbc.fill = GridBagConstraints.BOTH;
@@ -117,6 +120,8 @@ public final class PanelCreation extends JPanel {
 
         btAdd = new JButton(new AbstractAction("Ajouter element") {
 
+            private static final long serialVersionUID = 1L;
+
             @Override
             public void actionPerformed(ActionEvent e) {
 
@@ -129,19 +134,20 @@ public final class PanelCreation extends JPanel {
                     newElement = new Point(time, grandeur, 2, 5);
                     break;
                 case Element.CRENEAU:
-                    newElement = new Creneau(time, grandeur, 10, 20);
+                    newElement = new Creneau(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
                     break;
                 case Element.STATIONNAIRE:
-                    newElement = new Stationnaire(time, grandeur, 10, 20);
+                    newElement = new Stationnaire(time, grandeur, getDoubleValue(txtDuration.getText()));
                     break;
                 case Element.RAMPE:
-                    newElement = new Rampe(time, grandeur, 60, 10);
+                    newElement = new Rampe(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
                     break;
                 case Element.SINUS:
                     newElement = new Sinus(time, grandeur, 10, 20, 1, 0.5);
                     break;
                 case Element.TRAPEZE:
-                    newElement = new Trapeze(time, grandeur, 60, 10, 10);
+                    newElement = new Trapeze(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtTpsRampe.getText()),
+                            getDoubleValue(txtAmplitude.getText()));
                     break;
                 default:
                     break;
@@ -167,6 +173,8 @@ public final class PanelCreation extends JPanel {
         add(btAdd, gbc);
 
         btDel = new JButton(new AbstractAction("Supprimer element") {
+
+            private static final long serialVersionUID = 1L;
 
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -196,6 +204,89 @@ public final class PanelCreation extends JPanel {
         gbc.anchor = GridBagConstraints.NORTH;
         add(btDel, gbc);
 
+        gbc.fill = GridBagConstraints.VERTICAL;
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 5;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(new JSeparator(JSeparator.VERTICAL), gbc);
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 3;
+        gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 1;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(new JLabel("Duree de l'element : "), gbc);
+
+        txtDuration = new JTextField(10);
+        txtDuration.setEnabled(false);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 4;
+        gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 1;
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(txtDuration, gbc);
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 3;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 1;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(new JLabel("Amplitude de l'element : "), gbc);
+
+        txtAmplitude = new JTextField(10);
+        txtAmplitude.setEnabled(false);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 4;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 1;
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(txtAmplitude, gbc);
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 3;
+        gbc.gridy = 2;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 1;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(new JLabel("Duree de la rampe de l'element : "), gbc);
+
+        txtTpsRampe = new JTextField(10);
+        txtTpsRampe.setEnabled(false);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 4;
+        gbc.gridy = 2;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 1;
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(txtTpsRampe, gbc);
+
         setVisible(false);
     }
 
@@ -206,29 +297,37 @@ public final class PanelCreation extends JPanel {
 
         labelType.setText("Type : " + forme);
 
+        txtDuration.setEnabled(true);
+        txtAmplitude.setEnabled(true);
+
         switch (forme) {
         case Element.BASE:
 
         case Element.CRENEAU:
-
+            txtTpsRampe.setEnabled(false);
             break;
         case Element.STATIONNAIRE:
-
+            txtAmplitude.setEnabled(false);
+            txtTpsRampe.setEnabled(false);
             break;
         case Element.RAMPE:
-
+            txtTpsRampe.setEnabled(false);
             break;
         case Element.SINUS:
-
+            txtTpsRampe.setEnabled(false);
             break;
         case Element.TRAPEZE:
-
+            txtTpsRampe.setEnabled(true);
             break;
 
         default:
             break;
         }
 
+    }
+
+    private final double getDoubleValue(String txt) {
+        return Double.parseDouble(txt);
     }
 
 }

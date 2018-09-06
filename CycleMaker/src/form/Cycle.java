@@ -92,7 +92,7 @@ public final class Cycle implements Observable {
                 if (numDataset != this.datasets.size() - 1) {
                     writer.print(this.datasets.get(numDataset).getName() + "\t");
                 } else {
-                    writer.print(this.datasets.get(numDataset).getName() + "\n");
+                    writer.println(this.datasets.get(numDataset).getName());
                 }
             }
 
@@ -101,7 +101,12 @@ public final class Cycle implements Observable {
                     if (numDataset != this.datasets.size() - 1) {
                         writer.print(this.datasets.get(numDataset).getDatas().get(numPoint) + "\t");
                     } else {
-                        writer.print(this.datasets.get(numDataset).getDatas().get(numPoint) + "\n");
+                        if (numPoint != this.time.getDatas().size() - 1) {
+                            writer.println(this.datasets.get(numDataset).getDatas().get(numPoint));
+                        } else {
+                            writer.print(this.datasets.get(numDataset).getDatas().get(numPoint));
+                        }
+
                     }
                 }
             }
