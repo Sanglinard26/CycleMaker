@@ -19,7 +19,6 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
@@ -45,7 +44,7 @@ public final class PanelCreation extends JPanel {
     private final DefaultListModel<Element> dataModel;
     private final JComboBox<Dataset> comboBox;
     private final DefaultComboBoxModel<Dataset> comboBoxModel;
-    private final JTextField txtValue, txtDuration, txtAmplitude, txtTpsRampe, txtFrequence, txtNbCycle;
+    private final JTextField txtValue, txtDuration, txtAmplitude, txtTpsRampe, txtFrequence, txtNbRepetition;
 
     private Cycle cycle;
     private String selectedForm;
@@ -81,7 +80,7 @@ public final class PanelCreation extends JPanel {
 
         comboBoxModel = new DefaultComboBoxModel<>();
         comboBox = new JComboBox<>(comboBoxModel);
-        gbc.fill = GridBagConstraints.BOTH;
+        gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.gridwidth = 1;
@@ -89,11 +88,11 @@ public final class PanelCreation extends JPanel {
         gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.anchor = GridBagConstraints.WEST;
         add(comboBox, gbc);
 
         gbc.fill = GridBagConstraints.VERTICAL;
-        gbc.gridx = 0;
+        gbc.gridx = 2;
         gbc.gridy = 2;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
@@ -107,15 +106,15 @@ public final class PanelCreation extends JPanel {
         listElement = new JList<>(dataModel);
         listElement.setFixedCellWidth(80);
         listElement.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        gbc.fill = GridBagConstraints.VERTICAL;
-        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 2;
         gbc.gridy = 3;
         gbc.gridwidth = 1;
-        gbc.gridheight = 2;
+        gbc.gridheight = 8;
         gbc.weightx = 1;
         gbc.weighty = 1;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.anchor = GridBagConstraints.NORTH;
         add(new JScrollPane(listElement), gbc);
 
         btAdd = new JButton(new AbstractAction("Ajouter element") {
@@ -129,42 +128,48 @@ public final class PanelCreation extends JPanel {
                 final Dataset time = cycle.getDataset("Temps");
                 final Dataset grandeur = cycle.getDataset("LOOP40");
 
-                switch (selectedForm) {
-                case Element.POINT:
-                    newElement = new Point(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtValue.getText()));
-                    break;
-                case Element.CRENEAU:
-                    newElement = new Creneau(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
-                    break;
-                case Element.STATIONNAIRE:
-                    newElement = new Stationnaire(time, grandeur, getDoubleValue(txtDuration.getText()));
-                    break;
-                case Element.RAMPE:
-                    newElement = new Rampe(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
-                    break;
-                case Element.SINUS:
-                    newElement = new Sinus(time, grandeur, getDoubleValue(txtAmplitude.getText()), getDoubleValue(txtFrequence.getText()), getDoubleValue(txtNbCycle.getText()));
-                    break;
-                case Element.TRAPEZE:
-                    newElement = new Trapeze(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtTpsRampe.getText()),
-                            getDoubleValue(txtAmplitude.getText()));
-                    break;
-                default:
-                    break;
-                }
+                int cnt = 1;
 
-                if (!time.getDatas().isEmpty() && newElement != null) {
-                    cycle.addElementToDataset(cycle.getDataset("LOOP40"), newElement);
-                    dataModel.addElement(cycle.getDataset("LOOP40").getElements().get(cycle.getDataset("LOOP40").getElements().size() - 1));
-                } else {
-                    newElement = null;
-                }
+                do {
+
+                    switch (selectedForm) {
+                    case Element.POINT:
+                        newElement = new Point(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtValue.getText()));
+                        break;
+                    case Element.CRENEAU:
+                        newElement = new Creneau(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
+                        break;
+                    case Element.STATIONNAIRE:
+                        newElement = new Stationnaire(time, grandeur, getDoubleValue(txtDuration.getText()));
+                        break;
+                    case Element.RAMPE:
+                        newElement = new Rampe(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
+                        break;
+                    case Element.SINUS:
+                        newElement = new Sinus(time, grandeur, getDoubleValue(txtAmplitude.getText()), getDoubleValue(txtFrequence.getText()));
+                        break;
+                    case Element.TRAPEZE:
+                        newElement = new Trapeze(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtTpsRampe.getText()),
+                                getDoubleValue(txtAmplitude.getText()));
+                        break;
+                    }
+
+                    if (!time.getDatas().isEmpty() && newElement != null) {
+                        cycle.addElementToDataset(cycle.getDataset("LOOP40"), newElement);
+                        dataModel.addElement(cycle.getDataset("LOOP40").getElements().get(cycle.getDataset("LOOP40").getElements().size() - 1));
+                    } else {
+                        newElement = null;
+                    }
+
+                    cnt++;
+                } while (cnt <= Math.max(1, getDoubleValue(txtNbRepetition.getText())));
+
             }
         });
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridx = 1;
-        gbc.gridy = 3;
-        gbc.gridwidth = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0;
+        gbc.gridy = 9;
+        gbc.gridwidth = 2;
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
@@ -193,9 +198,9 @@ public final class PanelCreation extends JPanel {
 
             }
         });
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridx = 1;
-        gbc.gridy = 4;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 2;
+        gbc.gridy = 10;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 0;
@@ -204,33 +209,22 @@ public final class PanelCreation extends JPanel {
         gbc.anchor = GridBagConstraints.NORTH;
         add(btDel, gbc);
 
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        gbc.gridwidth = 2;
-        gbc.gridheight = 1;
-        gbc.weightx = 1;
-        gbc.weighty = 0;
-        gbc.insets = new Insets(5, 0, 5, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
-        add(new JSeparator(JSeparator.HORIZONTAL), gbc);
-        
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridy = 3;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.anchor = GridBagConstraints.WEST;
         add(new JLabel("Valeur du point : "), gbc);
 
         txtValue = new JTextField(10);
         txtValue.setEnabled(false);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
-        gbc.gridy = 6;
+        gbc.gridy = 3;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 1;
@@ -241,20 +235,20 @@ public final class PanelCreation extends JPanel {
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 0;
-        gbc.gridy = 7;
+        gbc.gridy = 4;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.anchor = GridBagConstraints.WEST;
         add(new JLabel("Duree de l'element : "), gbc);
 
         txtDuration = new JTextField(10);
         txtDuration.setEnabled(false);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
-        gbc.gridy = 7;
+        gbc.gridy = 4;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 1;
@@ -265,20 +259,20 @@ public final class PanelCreation extends JPanel {
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 0;
-        gbc.gridy = 8;
+        gbc.gridy = 5;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.anchor = GridBagConstraints.WEST;
         add(new JLabel("Amplitude de l'element : "), gbc);
 
         txtAmplitude = new JTextField(10);
         txtAmplitude.setEnabled(false);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
-        gbc.gridy = 8;
+        gbc.gridy = 5;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 1;
@@ -289,20 +283,20 @@ public final class PanelCreation extends JPanel {
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 0;
-        gbc.gridy = 9;
+        gbc.gridy = 6;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.anchor = GridBagConstraints.WEST;
         add(new JLabel("Duree de la rampe de l'element : "), gbc);
 
         txtTpsRampe = new JTextField(10);
         txtTpsRampe.setEnabled(false);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
-        gbc.gridy = 9;
+        gbc.gridy = 6;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 1;
@@ -310,23 +304,23 @@ public final class PanelCreation extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
         add(txtTpsRampe, gbc);
-        
+
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 0;
-        gbc.gridy = 10;
+        gbc.gridy = 7;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
-        add(new JLabel("Fréquence : "), gbc);
+        gbc.anchor = GridBagConstraints.WEST;
+        add(new JLabel("Frequence : "), gbc);
 
         txtFrequence = new JTextField(10);
         txtFrequence.setEnabled(false);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
-        gbc.gridy = 10;
+        gbc.gridy = 7;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 1;
@@ -334,30 +328,30 @@ public final class PanelCreation extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
         add(txtFrequence, gbc);
-        
+
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 0;
-        gbc.gridy = 11;
+        gbc.gridy = 8;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
-        add(new JLabel("Nombre de cycle : "), gbc);
+        gbc.anchor = GridBagConstraints.WEST;
+        add(new JLabel("Nombre de repetition : "), gbc);
 
-        txtNbCycle = new JTextField(10);
-        txtNbCycle.setEnabled(false);
+        txtNbRepetition = new JTextField(10);
+        txtNbRepetition.setEnabled(false);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
-        gbc.gridy = 11;
+        gbc.gridy = 8;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 1;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
-        add(txtNbCycle, gbc);
+        add(txtNbRepetition, gbc);
 
         setVisible(false);
     }
@@ -368,74 +362,71 @@ public final class PanelCreation extends JPanel {
         this.selectedForm = forme;
 
         labelType.setText("Type : " + forme);
-        
+
         txtValue.setText(null);
         txtDuration.setText(null);
         txtAmplitude.setText(null);
         txtTpsRampe.setText(null);
         txtFrequence.setText(null);
-        txtNbCycle.setText(null);
-
-        
+        txtNbRepetition.setText(null);
 
         switch (forme) {
         case Element.POINT:
-        	txtValue.setEnabled(true);
-        	txtDuration.setEnabled(true);
+            txtValue.setEnabled(true);
+            txtDuration.setEnabled(true);
             txtAmplitude.setEnabled(false);
             txtTpsRampe.setEnabled(false);
             txtFrequence.setEnabled(false);
-            txtNbCycle.setEnabled(false);
+            txtNbRepetition.setEnabled(true);
             break;
         case Element.CRENEAU:
-        	txtValue.setEnabled(false);
-        	txtDuration.setEnabled(true);
+            txtValue.setEnabled(false);
+            txtDuration.setEnabled(true);
             txtAmplitude.setEnabled(true);
             txtTpsRampe.setEnabled(false);
             txtFrequence.setEnabled(false);
-            txtNbCycle.setEnabled(false);
+            txtNbRepetition.setEnabled(true);
             break;
         case Element.STATIONNAIRE:
-        	txtValue.setEnabled(false);
-        	txtDuration.setEnabled(true);
+            txtValue.setEnabled(false);
+            txtDuration.setEnabled(true);
             txtAmplitude.setEnabled(false);
             txtTpsRampe.setEnabled(false);
             txtFrequence.setEnabled(false);
-            txtNbCycle.setEnabled(false);
+            txtNbRepetition.setEnabled(true);
             break;
         case Element.RAMPE:
-        	txtValue.setEnabled(false);
-        	txtDuration.setEnabled(true);
-        	txtAmplitude.setEnabled(true);
+            txtValue.setEnabled(false);
+            txtDuration.setEnabled(true);
+            txtAmplitude.setEnabled(true);
             txtTpsRampe.setEnabled(false);
             txtFrequence.setEnabled(false);
-            txtNbCycle.setEnabled(false);
+            txtNbRepetition.setEnabled(true);
             break;
         case Element.SINUS:
-        	txtValue.setEnabled(false);
-        	txtDuration.setEnabled(false);
-        	txtAmplitude.setEnabled(true);
+            txtValue.setEnabled(false);
+            txtDuration.setEnabled(false);
+            txtAmplitude.setEnabled(true);
             txtTpsRampe.setEnabled(false);
             txtFrequence.setEnabled(true);
-            txtNbCycle.setEnabled(true);
+            txtNbRepetition.setEnabled(true);
             break;
         case Element.TRAPEZE:
-        	txtValue.setEnabled(false);
-        	txtDuration.setEnabled(true);
-        	txtAmplitude.setEnabled(true);
+            txtValue.setEnabled(false);
+            txtDuration.setEnabled(true);
+            txtAmplitude.setEnabled(true);
             txtTpsRampe.setEnabled(true);
             txtFrequence.setEnabled(false);
-            txtNbCycle.setEnabled(false);
+            txtNbRepetition.setEnabled(true);
             break;
         }
 
     }
 
     private final double getDoubleValue(String txt) {
-    	if(!txt.isEmpty())
-    	{
-    		return Double.parseDouble(txt);
-    	}
+        if (!txt.isEmpty()) {
+            return Double.parseDouble(txt);
+        }
         return 0d;
     }
 

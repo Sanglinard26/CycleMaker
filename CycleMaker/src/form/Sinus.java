@@ -10,11 +10,11 @@ public final class Sinus extends Element {
     public static final double tEchantillon = 0.010;
     private double frequence;
 
-    public Sinus(Dataset time, Dataset dataset, double amplitude, double frequence, double nbCycle) {
+    public Sinus(Dataset time, Dataset dataset, double amplitude, double frequence) {
 
         this.amplitude = amplitude;
         this.frequence = frequence;
-        this.duration = (1 / frequence) * nbCycle + tEchantillon;
+        this.duration = (1 / frequence) + tEchantillon;
 
         if (!time.getDatas().isEmpty() && !dataset.getDatas().isEmpty()) {
             final double valDepart = dataset.getDatas().get(dataset.getDatas().size() - 1);
