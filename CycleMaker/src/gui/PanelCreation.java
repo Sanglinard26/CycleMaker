@@ -13,6 +13,7 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -98,7 +99,7 @@ public final class PanelCreation extends JPanel {
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.insets = new Insets(20, 0, 0, 0);
         gbc.anchor = GridBagConstraints.CENTER;
         add(new JLabel("Element(s)"), gbc);
 
@@ -106,16 +107,17 @@ public final class PanelCreation extends JPanel {
         listElement = new JList<>(dataModel);
         listElement.setFixedCellWidth(80);
         listElement.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 2;
         gbc.gridy = 3;
         gbc.gridwidth = 1;
-        gbc.gridheight = 8;
+        gbc.gridheight = 7;
         gbc.weightx = 1;
         gbc.weighty = 1;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.NORTH;
-        add(new JScrollPane(listElement), gbc);
+        gbc.anchor = GridBagConstraints.CENTER;
+        final JScrollPane scrollPane = new JScrollPane(listElement, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        add(scrollPane, gbc);
 
         btAdd = new JButton(new AbstractAction("Ajouter element") {
 
@@ -126,7 +128,7 @@ public final class PanelCreation extends JPanel {
 
                 Element newElement = null;
                 final Dataset time = cycle.getDataset("Temps");
-                final Dataset grandeur = cycle.getDataset("LOOP40");
+                final Dataset grandeur = cycle.getDataset(comboBox.getSelectedItem().toString());
 
                 int cnt = 1;
 
@@ -155,8 +157,8 @@ public final class PanelCreation extends JPanel {
                     }
 
                     if (!time.getDatas().isEmpty() && newElement != null) {
-                        cycle.addElementToDataset(cycle.getDataset("LOOP40"), newElement);
-                        dataModel.addElement(cycle.getDataset("LOOP40").getElements().get(cycle.getDataset("LOOP40").getElements().size() - 1));
+                        cycle.addElementToDataset(grandeur, newElement);
+                        dataModel.addElement(grandeur.getElements().get(grandeur.getElements().size() - 1));
                     } else {
                         newElement = null;
                     }
@@ -168,7 +170,7 @@ public final class PanelCreation extends JPanel {
         });
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 0;
-        gbc.gridy = 9;
+        gbc.gridy = 10;
         gbc.gridwidth = 2;
         gbc.gridheight = 1;
         gbc.weightx = 0;
@@ -211,6 +213,17 @@ public final class PanelCreation extends JPanel {
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.gridheight = 1;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(20, 0, 0, 0);
+        gbc.anchor = GridBagConstraints.WEST;
+        add(new JLabel("<html><u>Parametres : </u></html>"), gbc);
+        
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0;
         gbc.gridy = 3;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
@@ -242,7 +255,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
-        add(new JLabel("Duree de l'element : "), gbc);
+        add(new JLabel("Duree : "), gbc);
 
         txtDuration = new JTextField(10);
         txtDuration.setEnabled(false);
@@ -266,7 +279,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
-        add(new JLabel("Amplitude de l'element : "), gbc);
+        add(new JLabel("Amplitude : "), gbc);
 
         txtAmplitude = new JTextField(10);
         txtAmplitude.setEnabled(false);
@@ -290,7 +303,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
-        add(new JLabel("Duree de la rampe de l'element : "), gbc);
+        add(new JLabel("Duree de la rampe : "), gbc);
 
         txtTpsRampe = new JTextField(10);
         txtTpsRampe.setEnabled(false);
@@ -337,7 +350,7 @@ public final class PanelCreation extends JPanel {
         gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
         add(new JLabel("Nombre de repetition : "), gbc);
 
         txtNbRepetition = new JTextField(10);
@@ -350,8 +363,20 @@ public final class PanelCreation extends JPanel {
         gbc.weightx = 1;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
         add(txtNbRepetition, gbc);
+        
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0;
+        gbc.gridy = 9;
+        gbc.gridwidth = 2;
+        gbc.gridheight = 1;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.anchor = GridBagConstraints.CENTER;
+        ImageIcon icon = new ImageIcon(getClass().getResource("/icon_point_128.png"));
+        add(new JLabel(icon), gbc);
 
         setVisible(false);
     }
@@ -428,6 +453,22 @@ public final class PanelCreation extends JPanel {
             return Double.parseDouble(txt);
         }
         return 0d;
+    }
+    
+    public final void setCycle(Cycle cycle)
+    {
+    	this.cycle = cycle;
+    }
+    
+    public final void fillDataset(Cycle cycle)
+    {
+    	for(Dataset dataset : cycle.getDatasets())
+    	{
+    		if(comboBoxModel.getIndexOf(dataset)<0 && !"Temps".equals(dataset.getName()))
+    		{
+    			comboBoxModel.addElement(dataset);
+    		}
+    	}
     }
 
 }

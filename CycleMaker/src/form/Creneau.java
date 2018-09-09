@@ -16,6 +16,7 @@ public final class Creneau extends Element {
         if (!time.getDatas().isEmpty() && !dataset.getDatas().isEmpty()) {
 
             this.firstIndex = dataset.getDatas().size();
+            
 
             time.addData(time.getDatas().get(time.getDatas().size() - 1) + moveTime);
             dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) + 0);
@@ -27,6 +28,9 @@ public final class Creneau extends Element {
             dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) + 0);
 
             this.lastIndex = dataset.getDatas().size() - 1;
+            
+            this.t1 = time.getDatas().get(firstIndex);
+            this.t2 = time.getDatas().get(lastIndex);
         }
 
     }

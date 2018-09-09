@@ -89,6 +89,8 @@ public final class Ihm extends JFrame implements Observateur {
 
             @Override
             public void valueChanged(ListSelectionEvent e) {
+            	panelCreation.setCycle(listCycle.getSelectedValue());
+            	panelCreation.fillDataset(listCycle.getSelectedValue());
                 createCombinedChart();
 
             }

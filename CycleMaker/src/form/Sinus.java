@@ -28,6 +28,9 @@ public final class Sinus extends Element {
             }
 
             this.lastIndex = dataset.getDatas().size() - 1;
+            
+            this.t1 = time.getDatas().get(firstIndex);
+            this.t2 = time.getDatas().get(lastIndex);
 
         }
 

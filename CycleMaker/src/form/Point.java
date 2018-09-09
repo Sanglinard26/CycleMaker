@@ -23,6 +23,9 @@ public final class Point extends Element {
 
         this.firstIndex = dataset.getDatas().size() - 1;
         this.lastIndex = this.firstIndex;
+        
+        this.t1 = time.getDatas().get(firstIndex);
+        this.t2 = time.getDatas().get(lastIndex);
 
     }
 

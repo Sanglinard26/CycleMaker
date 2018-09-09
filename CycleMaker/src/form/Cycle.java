@@ -36,6 +36,7 @@ public final class Cycle implements Observable {
         this.addDataset("Temps");
         this.time = this.getDataset("Temps");
         this.addDataset("LOOP40");
+        this.addDataset("C_REG");
     }
 
     private final void parse(File file) {
@@ -189,6 +190,9 @@ public final class Cycle implements Observable {
             if (firstIndex > idx2) {
                 element.setFirstIndex(Math.max(0, firstIndex - removeNbPoint));
                 element.setLastIndex(Math.max(0, lastIndex - removeNbPoint));
+                
+                element.setT1(this.time.getDatas().get(element.getFirstIndex()));
+                element.setT2(this.time.getDatas().get(element.getLastIndex()));
             }
 
         }

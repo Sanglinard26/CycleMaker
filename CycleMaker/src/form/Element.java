@@ -3,6 +3,8 @@
  */
 package form;
 
+import java.text.NumberFormat;
+
 public abstract class Element {
 
     public static final String BASE = "Base";
@@ -17,6 +19,7 @@ public abstract class Element {
     public static final double moveTime = 0.01;
 
     protected int firstIndex, lastIndex;
+    protected double t1, t2;
     protected int nbPoint;
     protected double duration;
     protected double amplitude;
@@ -44,6 +47,14 @@ public abstract class Element {
     public int getLastIndex() {
         return lastIndex;
     }
+    
+    public double getT1() {
+		return t1;
+	}
+    
+    public double getT2() {
+		return t2;
+	}
 
     public void setFirstIndex(int firstIndex) {
         this.firstIndex = firstIndex;
@@ -52,10 +63,25 @@ public abstract class Element {
     public void setLastIndex(int lastIndex) {
         this.lastIndex = lastIndex;
     }
+    
+    public void setT1(double t1) {
+		this.t1 = t1;
+	}
+    
+    public void setT2(double t2) {
+		this.t2 = t2;
+	}
+    
+    public final String getName()
+    {
+    	return this.getClass().getSimpleName();
+    }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName();
+    	final NumberFormat nf = NumberFormat.getInstance();
+    	
+        return this.getClass().getSimpleName() + " (" + nf.format(t1) + "s" + "-" + nf.format(t2) + "s" + ")";
     }
 
     public String getInfo() {

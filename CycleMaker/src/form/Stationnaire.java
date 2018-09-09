@@ -23,6 +23,9 @@ public final class Stationnaire extends Element {
             dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) + this.amplitude);
 
             this.lastIndex = dataset.getDatas().size() - 1;
+            
+            this.t1 = time.getDatas().get(firstIndex);
+            this.t2 = time.getDatas().get(lastIndex);
         }
 
     }

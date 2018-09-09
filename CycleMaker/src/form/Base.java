@@ -14,6 +14,9 @@ public final class Base extends Element {
 
         this.firstIndex = 0;
         this.lastIndex = time.getDatas().size() - 1;
+        
+        this.t1 = 0;
+        this.t2 = time.getDatas().get(lastIndex);
 
         for (double value : dataset.getDatas()) {
             this.amplitude = Math.max(amplitude, value);
