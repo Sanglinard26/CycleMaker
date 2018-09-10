@@ -8,6 +8,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -90,6 +91,21 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
+        comboBox.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dataModel.clear();
+
+                if (!comboBox.getSelectedItem().toString().isEmpty()) {
+                    for (Element element : cycle.getDataset(comboBox.getSelectedItem().toString()).getElements()) {
+                        dataModel.addElement(element);
+
+                    }
+                }
+
+            }
+        });
         add(comboBox, gbc);
 
         gbc.fill = GridBagConstraints.VERTICAL;
@@ -191,11 +207,11 @@ public final class PanelCreation extends JPanel {
                     dataModel.removeElement(selectedElement);
 
                     for (int i = selectedElement.getLastIndex(); i >= selectedElement.getFirstIndex(); i--) {
-                        cycle.getDataset("LOOP40").getDatas().remove(i);
+                        cycle.getDataset(comboBox.getSelectedItem().toString()).getDatas().remove(i);
                         cycle.getTime().getDatas().remove(i);
                     }
 
-                    cycle.removeElementFromDataset(cycle.getDataset("LOOP40"), selectedElement);
+                    cycle.removeElementFromDataset(cycle.getDataset(comboBox.getSelectedItem().toString()), selectedElement);
                 }
 
             }
@@ -221,7 +237,7 @@ public final class PanelCreation extends JPanel {
         gbc.insets = new Insets(20, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
         add(new JLabel("<html><u>Parametres : </u></html>"), gbc);
-        
+
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 0;
         gbc.gridy = 3;
@@ -365,7 +381,7 @@ public final class PanelCreation extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.NORTHWEST;
         add(txtNbRepetition, gbc);
-        
+
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0;
         gbc.gridy = 9;
@@ -454,21 +470,17 @@ public final class PanelCreation extends JPanel {
         }
         return 0d;
     }
-    
-    public final void setCycle(Cycle cycle)
-    {
-    	this.cycle = cycle;
+
+    public final void setCycle(Cycle cycle) {
+        this.cycle = cycle;
     }
-    
-    public final void fillDataset(Cycle cycle)
-    {
-    	for(Dataset dataset : cycle.getDatasets())
-    	{
-    		if(comboBoxModel.getIndexOf(dataset)<0 && !"Temps".equals(dataset.getName()))
-    		{
-    			comboBoxModel.addElement(dataset);
-    		}
-    	}
+
+    public final void fillDataset(Cycle cycle) {
+        for (Dataset dataset : cycle.getDatasets()) {
+            if (comboBoxModel.getIndexOf(dataset) < 0 && !"Temps".equals(dataset.getName())) {
+                comboBoxModel.addElement(dataset);
+            }
+        }
     }
 
 }

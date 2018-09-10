@@ -115,6 +115,7 @@ public final class Cycle implements Observable {
             return true;
 
         } catch (Exception e) {
+            System.out.println(e);
         }
 
         return false;
@@ -190,7 +191,7 @@ public final class Cycle implements Observable {
             if (firstIndex > idx2) {
                 element.setFirstIndex(Math.max(0, firstIndex - removeNbPoint));
                 element.setLastIndex(Math.max(0, lastIndex - removeNbPoint));
-                
+
                 element.setT1(this.time.getDatas().get(element.getFirstIndex()));
                 element.setT2(this.time.getDatas().get(element.getLastIndex()));
             }
