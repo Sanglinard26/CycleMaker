@@ -3,6 +3,7 @@
  */
 package gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -40,7 +41,7 @@ public final class PanelCreation extends JPanel {
 
     private static final GridBagConstraints gbc = new GridBagConstraints();
 
-    private final JLabel labelType;
+    private final JLabel labelType, iconElement;
     private final JButton btDel, btAdd;
     private final JList<Element> listElement;
     private final DefaultListModel<Element> dataModel;
@@ -55,7 +56,7 @@ public final class PanelCreation extends JPanel {
 
         setLayout(new GridBagLayout());
         setBorder(BorderFactory.createTitledBorder("Creation"));
-        setPreferredSize(new Dimension(400, 0));
+        //setPreferredSize(new Dimension(400, 0));
 
         labelType = new JLabel("Type : ");
         gbc.fill = GridBagConstraints.BOTH;
@@ -130,7 +131,7 @@ public final class PanelCreation extends JPanel {
         gbc.gridheight = 7;
         gbc.weightx = 1;
         gbc.weighty = 1;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.insets = new Insets(0, 0, 10, 0);
         gbc.anchor = GridBagConstraints.CENTER;
         final JScrollPane scrollPane = new JScrollPane(listElement, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         add(scrollPane, gbc);
@@ -227,7 +228,7 @@ public final class PanelCreation extends JPanel {
         gbc.anchor = GridBagConstraints.NORTH;
         add(btDel, gbc);
 
-        gbc.fill = GridBagConstraints.NONE;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.gridwidth = 2;
@@ -382,17 +383,20 @@ public final class PanelCreation extends JPanel {
         gbc.anchor = GridBagConstraints.NORTHWEST;
         add(txtNbRepetition, gbc);
 
-        gbc.fill = GridBagConstraints.BOTH;
+        gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 0;
         gbc.gridy = 9;
         gbc.gridwidth = 2;
         gbc.gridheight = 1;
-        gbc.weightx = 1;
-        gbc.weighty = 1;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.CENTER;
-        ImageIcon icon = new ImageIcon(getClass().getResource("/icon_point_128.png"));
-        add(new JLabel(icon), gbc);
+        iconElement = new JLabel();
+        iconElement.setMinimumSize(new Dimension(200, 200));
+        iconElement.setPreferredSize(new Dimension(200, 200));
+        iconElement.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        add(iconElement, gbc);
 
         setVisible(false);
     }
@@ -410,6 +414,8 @@ public final class PanelCreation extends JPanel {
         txtTpsRampe.setText(null);
         txtFrequence.setText(null);
         txtNbRepetition.setText(null);
+        
+        iconElement.setIcon(null);
 
         switch (forme) {
         case Element.POINT:
@@ -419,6 +425,7 @@ public final class PanelCreation extends JPanel {
             txtTpsRampe.setEnabled(false);
             txtFrequence.setEnabled(false);
             txtNbRepetition.setEnabled(true);
+            iconElement.setIcon(new ImageIcon(getClass().getResource(Element.ICON_POINT)));
             break;
         case Element.CRENEAU:
             txtValue.setEnabled(false);
@@ -427,6 +434,7 @@ public final class PanelCreation extends JPanel {
             txtTpsRampe.setEnabled(false);
             txtFrequence.setEnabled(false);
             txtNbRepetition.setEnabled(true);
+            iconElement.setIcon(new ImageIcon(getClass().getResource(Element.ICON_CRENEAU)));
             break;
         case Element.STATIONNAIRE:
             txtValue.setEnabled(false);
@@ -435,6 +443,7 @@ public final class PanelCreation extends JPanel {
             txtTpsRampe.setEnabled(false);
             txtFrequence.setEnabled(false);
             txtNbRepetition.setEnabled(true);
+            iconElement.setIcon(new ImageIcon(getClass().getResource(Element.ICON_STATIONNAIRE)));
             break;
         case Element.RAMPE:
             txtValue.setEnabled(false);
@@ -443,6 +452,7 @@ public final class PanelCreation extends JPanel {
             txtTpsRampe.setEnabled(false);
             txtFrequence.setEnabled(false);
             txtNbRepetition.setEnabled(true);
+            iconElement.setIcon(new ImageIcon(getClass().getResource(Element.ICON_RAMPE)));
             break;
         case Element.SINUS:
             txtValue.setEnabled(false);
@@ -451,6 +461,7 @@ public final class PanelCreation extends JPanel {
             txtTpsRampe.setEnabled(false);
             txtFrequence.setEnabled(true);
             txtNbRepetition.setEnabled(true);
+            iconElement.setIcon(new ImageIcon(getClass().getResource(Element.ICON_SINUS)));
             break;
         case Element.TRAPEZE:
             txtValue.setEnabled(false);
@@ -459,6 +470,7 @@ public final class PanelCreation extends JPanel {
             txtTpsRampe.setEnabled(true);
             txtFrequence.setEnabled(false);
             txtNbRepetition.setEnabled(true);
+            iconElement.setIcon(new ImageIcon(getClass().getResource(Element.ICON_TRAPEZE)));
             break;
         }
 

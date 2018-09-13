@@ -163,6 +163,7 @@ public final class Cycle implements Observable {
 
     public final void addElementToDataset(Dataset dataset, Element form) {
         dataset.addElement(form);
+        System.out.println(time.getDatas());
         updateObservateur("Chart");
     }
 

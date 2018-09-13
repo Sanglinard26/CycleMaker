@@ -109,6 +109,7 @@ public final class Ihm extends JFrame implements Observateur {
 
         pack();
 
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 

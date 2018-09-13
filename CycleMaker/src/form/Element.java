@@ -11,10 +11,16 @@ public abstract class Element {
     public static final String POINT = "Point";
     public static final String CRENEAU = "Creneau";
     public static final String STATIONNAIRE = "Stationnaire";
-    public static final String DOUBLE_RAMPE = "Double Rampe";
     public static final String RAMPE = "Rampe";
     public static final String SINUS = "Sinus";
     public static final String TRAPEZE = "Trapeze";
+    
+    public static final String ICON_POINT =  "/icon_point_200.png";
+    public static final String ICON_CRENEAU =  "/icon_creneau_200.png";
+    public static final String ICON_STATIONNAIRE =  "/icon_stationnaire_200.png";
+    public static final String ICON_RAMPE =  "/icon_rampe_200.png";
+    public static final String ICON_SINUS =  "/icon_sinus_200.png";
+    public static final String ICON_TRAPEZE =  "/icon_trapeze_200.png";
 
     public static final double moveTime = 0.01;
 
