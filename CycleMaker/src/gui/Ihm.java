@@ -21,8 +21,11 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -30,6 +33,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
@@ -272,13 +276,24 @@ public final class Ihm extends JFrame implements Observateur {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-
-        	String cycleName = JOptionPane.showInputDialog(Ihm.this, "Nom du cycle", "Nouveau_cycle");
         	
-            final Cycle cycle = new Cycle(cycleName);
-            cycle.addObservateur(Ihm.this);
-            dataModel.addElement(cycle);
-
+        	final JTextField txtCycleName = new JTextField("Nouveau_cycle", 30);
+        	final JComboBox<String> cbFrequence = new JComboBox<>(new String[]{"10", "20", "50", "100"});
+        	final JTextField txtDatasets = new JTextField(30);
+        	final JComponent[] inputs = new JComponent[] {
+        	        new JLabel("Nom du cycle"),
+        	        txtCycleName,
+        	        new JLabel("Frequence d'echantillonnage"),
+        	        cbFrequence,
+        	        new JLabel("Grandeur(s) a piloter"),
+        	        txtDatasets
+        	};
+        	int result = JOptionPane.showConfirmDialog(null, inputs, "Proprietes du cycle", JOptionPane.PLAIN_MESSAGE);
+        	if (result == JOptionPane.OK_OPTION) {
+        		final Cycle cycle = new Cycle(txtCycleName.getText());
+                cycle.addObservateur(Ihm.this);
+                dataModel.addElement(cycle);
+        	}
         }
     }
 
