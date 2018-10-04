@@ -56,7 +56,6 @@ public final class PanelCreation extends JPanel {
 
         setLayout(new GridBagLayout());
         setBorder(BorderFactory.createTitledBorder("Creation"));
-        //setPreferredSize(new Dimension(400, 0));
 
         labelType = new JLabel("Type : ");
         gbc.fill = GridBagConstraints.BOTH;
@@ -153,7 +152,7 @@ public final class PanelCreation extends JPanel {
 
                     switch (selectedForm) {
                     case Element.POINT:
-                        newElement = new Point(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtValue.getText()));
+                        newElement = new Point(time, grandeur, getDoubleValue(txtValue.getText()));
                         break;
                     case Element.CRENEAU:
                         newElement = new Creneau(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
@@ -393,8 +392,8 @@ public final class PanelCreation extends JPanel {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.CENTER;
         iconElement = new JLabel();
-        iconElement.setMinimumSize(new Dimension(200, 200));
-        iconElement.setPreferredSize(new Dimension(200, 200));
+        iconElement.setMinimumSize(new Dimension(200, 140));
+        iconElement.setPreferredSize(new Dimension(200, 140));
         iconElement.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         add(iconElement, gbc);
 
@@ -414,17 +413,17 @@ public final class PanelCreation extends JPanel {
         txtTpsRampe.setText(null);
         txtFrequence.setText(null);
         txtNbRepetition.setText(null);
-        
+
         iconElement.setIcon(null);
 
         switch (forme) {
         case Element.POINT:
             txtValue.setEnabled(true);
-            txtDuration.setEnabled(true);
+            txtDuration.setEnabled(false);
             txtAmplitude.setEnabled(false);
             txtTpsRampe.setEnabled(false);
             txtFrequence.setEnabled(false);
-            txtNbRepetition.setEnabled(true);
+            txtNbRepetition.setEnabled(false);
             iconElement.setIcon(new ImageIcon(getClass().getResource(Element.ICON_POINT)));
             break;
         case Element.CRENEAU:

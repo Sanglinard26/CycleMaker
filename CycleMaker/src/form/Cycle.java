@@ -18,8 +18,6 @@ import utils.Utilitaire;
 
 public final class Cycle implements Observable {
 
-    public static final double tEchantillon = 0.010;
-
     private String name;
     private List<Dataset> datasets;
     private Dataset time;
@@ -30,13 +28,15 @@ public final class Cycle implements Observable {
         parse(file);
     }
 
-    public Cycle(String name) {
+    public Cycle(String name, String grandeurs) {
         this.name = name;
         this.datasets = new ArrayList<Dataset>();
         this.addDataset("Temps");
         this.time = this.getDataset("Temps");
-        this.addDataset("LOOP40");
-        this.addDataset("C_REG");
+
+        for (String grandeur : grandeurs.split(",")) {
+            this.addDataset(grandeur.trim());
+        }
     }
 
     private final void parse(File file) {
@@ -163,7 +163,6 @@ public final class Cycle implements Observable {
 
     public final void addElementToDataset(Dataset dataset, Element form) {
         dataset.addElement(form);
-        System.out.println(time.getDatas());
         updateObservateur("Chart");
     }
 

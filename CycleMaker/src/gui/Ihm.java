@@ -21,7 +21,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -93,8 +92,8 @@ public final class Ihm extends JFrame implements Observateur {
 
             @Override
             public void valueChanged(ListSelectionEvent e) {
-            	panelCreation.setCycle(listCycle.getSelectedValue());
-            	panelCreation.fillDataset(listCycle.getSelectedValue());
+                panelCreation.setCycle(listCycle.getSelectedValue());
+                panelCreation.fillDataset(listCycle.getSelectedValue());
                 createCombinedChart();
 
             }
@@ -208,9 +207,8 @@ public final class Ihm extends JFrame implements Observateur {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-            	if(listCycle.getSelectedValue() != null)
-            	{
-            		designMode = btDesign.isSelected();
+                if (listCycle.getSelectedValue() != null) {
+                    designMode = btDesign.isSelected();
                     panelCreation.setVisible(designMode);
 
                     btPoint.setEnabled(designMode);
@@ -219,10 +217,9 @@ public final class Ihm extends JFrame implements Observateur {
                     btRampe.setEnabled(designMode);
                     btSinus.setEnabled(designMode);
                     btTrapeze.setEnabled(designMode);
-            	}else{
-            		btDesign.setSelected(false);
-            	}
-                
+                } else {
+                    btDesign.setSelected(false);
+                }
 
             }
         });
@@ -276,24 +273,18 @@ public final class Ihm extends JFrame implements Observateur {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-        	
-        	final JTextField txtCycleName = new JTextField("Nouveau_cycle", 30);
-        	final JComboBox<String> cbFrequence = new JComboBox<>(new String[]{"10", "20", "50", "100"});
-        	final JTextField txtDatasets = new JTextField(30);
-        	final JComponent[] inputs = new JComponent[] {
-        	        new JLabel("Nom du cycle"),
-        	        txtCycleName,
-        	        new JLabel("Frequence d'echantillonnage"),
-        	        cbFrequence,
-        	        new JLabel("Grandeur(s) a piloter"),
-        	        txtDatasets
-        	};
-        	int result = JOptionPane.showConfirmDialog(null, inputs, "Proprietes du cycle", JOptionPane.PLAIN_MESSAGE);
-        	if (result == JOptionPane.OK_OPTION) {
-        		final Cycle cycle = new Cycle(txtCycleName.getText());
+
+            final JTextField txtCycleName = new JTextField("Nouveau_cycle", 30);
+            final JTextField txtDatasets = new JTextField(30);
+            txtDatasets.setToolTipText("Saisir les diverses grandeurs a piloter en les separant d'une virgule (Ex : C_REG,LOOP40)");
+            final JComponent[] inputs = new JComponent[] { new JLabel("Nom du cycle"), txtCycleName, new JLabel("Grandeur(s) a piloter"),
+                    txtDatasets };
+            int result = JOptionPane.showConfirmDialog(null, inputs, "Proprietes du cycle", JOptionPane.PLAIN_MESSAGE);
+            if (result == JOptionPane.OK_OPTION) {
+                final Cycle cycle = new Cycle(txtCycleName.getText(), txtDatasets.getText());
                 cycle.addObservateur(Ihm.this);
                 dataModel.addElement(cycle);
-        	}
+            }
         }
     }
 
