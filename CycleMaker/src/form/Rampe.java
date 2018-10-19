@@ -7,32 +7,35 @@ import form.Cycle.Dataset;
 
 public final class Rampe extends Element {
 
-    public Rampe(Dataset time, Dataset dataset, double duration, double amplitude) {
+    private static final long serialVersionUID = 1L;
 
-        this.duration = duration - te;
+    public Rampe(Dataset dataset, double duration, double amplitude) {
+
+        this.duration = duration;
         this.amplitude = amplitude;
 
-        final double gradient = this.amplitude / ((this.duration + te) / te);
+        final int nPoint = (int) (this.duration / te);
+        final double gradient = this.amplitude / nPoint;
 
-        if (!time.getDatas().isEmpty() && !dataset.getDatas().isEmpty()) {
+        if (!dataset.getDatas().isEmpty()) {
             this.firstIndex = dataset.getDatas().size();
 
-            time.addData(time.getDatas().get(time.getDatas().size() - 1) + te);
             dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) + 0);
             this.nbPoint++;
 
-            for (double t = 0; t <= this.duration; t = t + te) {
-                time.addData(time.getDatas().get(time.getDatas().size() - 1) + te);
+            for (int i = 1; i <= nPoint; i++) {
                 dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) + gradient);
                 this.nbPoint++;
             }
 
             this.lastIndex = dataset.getDatas().size() - 1;
-
-            this.t1 = time.getDatas().get(firstIndex);
-            this.t2 = time.getDatas().get(lastIndex);
         }
 
+    }
+
+    @Override
+    public double DiffEndFromBeginValue() {
+        return this.amplitude;
     }
 
 }

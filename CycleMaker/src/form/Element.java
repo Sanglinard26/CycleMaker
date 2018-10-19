@@ -3,9 +3,12 @@
  */
 package form;
 
+import java.io.Serializable;
 import java.text.NumberFormat;
 
-public abstract class Element {
+public abstract class Element implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public static final String BASE = "Base";
     public static final String POINT = "Point";
@@ -22,13 +25,22 @@ public abstract class Element {
     public static final String ICON_SINUS = "/icon_sinus_200.png";
     public static final String ICON_TRAPEZE = "/icon_trapeze_200.png";
 
-    public static final double te = 0.01;
+    public static final double te = 0.1;
 
     protected int firstIndex, lastIndex;
     protected double t1, t2;
     protected int nbPoint;
+    protected int position;
     protected double duration;
     protected double amplitude;
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
+    }
 
     public double getDuration() {
         return duration;
@@ -37,6 +49,8 @@ public abstract class Element {
     public double getAmplitude() {
         return amplitude;
     }
+
+    public abstract double DiffEndFromBeginValue();
 
     public void setAmplitude(double amplitude) {
         this.amplitude = amplitude;
@@ -87,16 +101,6 @@ public abstract class Element {
         final NumberFormat nf = NumberFormat.getInstance();
 
         return this.getClass().getSimpleName() + " (" + nf.format(t1) + "s" + "-" + nf.format(t2) + "s" + ")";
-    }
-
-    public String getInfo() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Type : " + this.toString() + "\n");
-        sb.append("Duration : " + this.duration + "\n");
-        sb.append("Nb point : " + this.nbPoint + "\n");
-        sb.append("First index : " + this.firstIndex + "\n");
-        sb.append("Last index : " + this.lastIndex + "\n");
-        return sb.toString();
     }
 
 }

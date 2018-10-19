@@ -7,6 +7,7 @@ import javax.swing.JFileChooser;
 public abstract class Utilitaire {
 
     public final static String TXT = "txt";
+    public final static String CYCLE = "cycle";
 
     /*
      * Get the extension of a file.

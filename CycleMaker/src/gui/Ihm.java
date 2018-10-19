@@ -3,14 +3,19 @@
  */
 package gui;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Paint;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.Enumeration;
 import java.util.List;
@@ -92,10 +97,39 @@ public final class Ihm extends JFrame implements Observateur {
 
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                panelCreation.setCycle(listCycle.getSelectedValue());
-                panelCreation.fillDataset(listCycle.getSelectedValue());
-                createCombinedChart();
+                if (e.getValueIsAdjusting() == false && !listCycle.isSelectionEmpty()) {
+                    panelCreation.setCycle(listCycle.getSelectedValue());
+                    panelCreation.fillDataset();
+                    createCombinedChart();
+                }
+            }
+        });
 
+        listCycle.addKeyListener(new KeyListener() {
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == 127 && listCycle.getSelectedIndex() > -1) // touche suppr
+                {
+                    for (int idx : listCycle.getSelectedIndices()) {
+                        dataModel.remove(idx);
+                    }
+
+                    listCycle.clearSelection();
+
+                    panelCreation.setCycle(null);
+                }
             }
         });
 
@@ -108,6 +142,40 @@ public final class Ihm extends JFrame implements Observateur {
         content.add(chartPanel, BorderLayout.CENTER);
 
         panelCreation = new PanelCreation();
+        panelCreation.addPropertyChangeListener(new PropertyChangeListener() {
+
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (evt.getPropertyName().equals("selectedElement")) {
+
+                    int idxDataset = panelCreation.getIndexDataset();
+
+                    Element element = (Element) evt.getNewValue();
+
+                    XYSeries series = new XYSeries("Element");
+                    for (int i = element.getFirstIndex(); i <= element.getLastIndex(); i++) {
+                        Double val = listCycle.getSelectedValue().getDatasets().get(idxDataset).getDatas().get(i);
+                        series.add(listCycle.getSelectedValue().getTime().get(i), val);
+                    }
+                    XYPlot plot = ((XYPlot) ((CombinedDomainXYPlot) chartPanel.getChart().getPlot()).getSubplots().get(idxDataset));
+                    XYSeriesCollection collection = ((XYSeriesCollection) plot.getDataset());
+                    int idx = collection.getSeriesIndex("Element");
+                    if (idx > -1) {
+                        collection.removeSeries(idx);
+                    }
+                    collection.addSeries(series);
+
+                    XYLineAndShapeRenderer renderer = ((XYLineAndShapeRenderer) plot.getRenderer(0));
+                    Paint serieColor = renderer.getSeriesPaint(0);
+
+                    renderer.setSeriesStroke(1, new BasicStroke(3));
+                    renderer.setSeriesPaint(1, serieColor);
+                    renderer.setSeriesShapesVisible(1, false);
+
+                }
+
+            }
+        });
         content.add(panelCreation, BorderLayout.EAST);
 
         pack();
@@ -275,7 +343,7 @@ public final class Ihm extends JFrame implements Observateur {
         public void actionPerformed(ActionEvent e) {
 
             final JTextField txtCycleName = new JTextField("Nouveau_cycle", 30);
-            final JTextField txtDatasets = new JTextField(30);
+            final JTextField txtDatasets = new JTextField("LOOP40", 30);
             txtDatasets.setToolTipText("Saisir les diverses grandeurs a piloter en les separant d'une virgule (Ex : C_REG,LOOP40)");
             final JComponent[] inputs = new JComponent[] { new JLabel("Nom du cycle"), txtCycleName, new JLabel("Grandeur(s) a piloter"),
                     txtDatasets };
@@ -299,7 +367,7 @@ public final class Ihm extends JFrame implements Observateur {
 
                 @Override
                 public String getDescription() {
-                    return "Fichier texte de cycle (*.txt)";
+                    return "Fichier de cycle (*.txt, *.cycle)";
                 }
 
                 @Override
@@ -309,7 +377,7 @@ public final class Ihm extends JFrame implements Observateur {
                         return true;
 
                     final String extension = Utilitaire.getExtension(f);
-                    if (extension.equals(Utilitaire.TXT)) {
+                    if (extension.equals(Utilitaire.TXT) || extension.equals(Utilitaire.CYCLE)) {
                         return true;
                     }
                     return false;
@@ -334,48 +402,52 @@ public final class Ihm extends JFrame implements Observateur {
 
     private final void createCombinedChart() {
 
-        final int nbPlot = listCycle.getSelectedValue().getDatasets().size() - 1;
+        final Cycle selectedCycle = listCycle.getSelectedValue();
 
-        final XYSeries[] series = new XYSeries[nbPlot];
-        final XYSeriesCollection[] collections = new XYSeriesCollection[nbPlot];
-        final XYItemRenderer[] renderers = new XYLineAndShapeRenderer[nbPlot];
-        final NumberAxis[] rangeAxiss = new NumberAxis[nbPlot];
-        final XYPlot[] subPlots = new XYPlot[nbPlot];
+        if (selectedCycle != null) {
+            final int nbPlot = selectedCycle.getDatasets().size();
 
-        final CombinedDomainXYPlot plot = new CombinedDomainXYPlot();
+            final XYSeries[] series = new XYSeries[nbPlot];
+            final XYSeriesCollection[] collections = new XYSeriesCollection[nbPlot];
+            final XYItemRenderer[] renderers = new XYLineAndShapeRenderer[nbPlot];
+            final NumberAxis[] rangeAxiss = new NumberAxis[nbPlot];
+            final XYPlot[] subPlots = new XYPlot[nbPlot];
 
-        final List<Double> temps = listCycle.getSelectedValue().getDatasets().get(0).getDatas();
-        final int nbPoint = temps.size();
+            final CombinedDomainXYPlot plot = new CombinedDomainXYPlot();
 
-        for (int nPlot = 0; nPlot < nbPlot; nPlot++) {
+            final List<Double> temps = selectedCycle.getTime();
+            final int nbPoint = temps.size();
 
-            series[nPlot] = new XYSeries(listCycle.getSelectedValue().getDatasets().get(nPlot + 1).getName());
-            for (int n = 0; n < nbPoint; n++) {
+            for (int nPlot = 0; nPlot < nbPlot; nPlot++) {
 
-                int sizeData = listCycle.getSelectedValue().getDatasets().get(nPlot + 1).getDatas().size();
+                series[nPlot] = new XYSeries(selectedCycle.getDatasets().get(nPlot).getName());
+                for (int n = 0; n < nbPoint; n++) {
 
-                if (n < sizeData) {
-                    series[nPlot].add(temps.get(n), listCycle.getSelectedValue().getDatasets().get(nPlot + 1).getDatas().get(n));
+                    int sizeData = listCycle.getSelectedValue().getDatasets().get(nPlot).getDatas().size();
+
+                    if (n < sizeData) {
+                        series[nPlot].add(temps.get(n), selectedCycle.getDatasets().get(nPlot).getDatas().get(n));
+                    }
                 }
+
+                collections[nPlot] = new XYSeriesCollection(series[nPlot]);
+                rangeAxiss[nPlot] = new NumberAxis(selectedCycle.getDatasets().get(nPlot).getName());
+                renderers[nPlot] = new XYLineAndShapeRenderer(true, false);
+                subPlots[nPlot] = new XYPlot(collections[nPlot], null, rangeAxiss[nPlot], renderers[nPlot]);
+
+                plot.add(subPlots[nPlot], 1);
             }
 
-            collections[nPlot] = new XYSeriesCollection(series[nPlot]);
-            rangeAxiss[nPlot] = new NumberAxis(listCycle.getSelectedValue().getDatasets().get(nPlot + 1).getName());
-            renderers[nPlot] = new XYLineAndShapeRenderer(true, true);
-            subPlots[nPlot] = new XYPlot(collections[nPlot], null, rangeAxiss[nPlot], renderers[nPlot]);
+            plot.setDomainPannable(true);
+            plot.setOrientation(PlotOrientation.VERTICAL);
+            plot.setGap(20);
+            plot.setDomainCrosshairVisible(true);
 
-            plot.add(subPlots[nPlot], 1);
+            JFreeChart chart = new JFreeChart(plot);
+
+            chartPanel.setChart(chart);
+            chartPanel.setRangeZoomable(false);
         }
-
-        plot.setDomainPannable(true);
-        plot.setOrientation(PlotOrientation.VERTICAL);
-        plot.setGap(20);
-        plot.setDomainCrosshairVisible(true);
-
-        JFreeChart chart = new JFreeChart(plot);
-
-        chartPanel.setChart(chart);
-        chartPanel.setRangeZoomable(false);
     }
 
     private final class SaveCycle implements ActionListener {
@@ -383,18 +455,29 @@ public final class Ihm extends JFrame implements Observateur {
         @Override
         public void actionPerformed(ActionEvent e) {
 
-            if (listCycle.getSelectedValue() != null) {
+            final Cycle selectedCycle = listCycle.getSelectedValue();
+
+            if (selectedCycle != null) {
                 final JFileChooser jFileChooser = new JFileChooser();
                 jFileChooser.setDialogTitle("Enregistement du fichier");
                 jFileChooser.setFileFilter(new FileNameExtensionFilter("Fichier texte (*.txt)", "txt"));
-                jFileChooser.setSelectedFile(new File(listCycle.getSelectedValue().getName() + ".txt"));
+                jFileChooser.setSelectedFile(new File(selectedCycle.getName() + ".txt"));
                 final int rep = jFileChooser.showSaveDialog(Ihm.this);
 
                 if (rep == JFileChooser.APPROVE_OPTION) {
-                    boolean saveOK = listCycle.getSelectedValue().save(jFileChooser.getSelectedFile());
-                    if (saveOK == true) {
-                        JOptionPane.showMessageDialog(Ihm.this, "Sauvegarde terminee !", "Message", JOptionPane.INFORMATION_MESSAGE);
-                    }
+
+                    Thread thread = new Thread(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            if (selectedCycle.save(jFileChooser.getSelectedFile())) {
+                                JOptionPane.showMessageDialog(Ihm.this, "Sauvegarde terminee !", "Message", JOptionPane.INFORMATION_MESSAGE);
+                            }
+                        }
+                    });
+
+                    thread.start();
+
                 }
             }
         }

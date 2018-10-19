@@ -7,27 +7,31 @@ import form.Cycle.Dataset;
 
 public final class Trapeze extends Element {
 
-    public Trapeze(Dataset time, Dataset dataset, double duration, double tpsRampe, double amplitude) {
+    private static final long serialVersionUID = 1L;
 
-        this.duration = duration - te;
+    public Trapeze(Dataset dataset, double duration, double tpsRampe, double amplitude) {
+
+        this.duration = duration;
         this.amplitude = amplitude;
 
         final double tPlateau = this.duration - (tpsRampe * 2);
         final double gradient = this.amplitude / (tpsRampe / te);
 
-        if (!time.getDatas().isEmpty() && !dataset.getDatas().isEmpty()) {
+        final int nPoint = (int) (this.duration / te);
+        final int nPointPlateau = (int) (tPlateau / te);
+        final int nPointRampe = (nPoint - nPointPlateau) / 2;
+
+        if (!dataset.getDatas().isEmpty()) {
 
             this.firstIndex = dataset.getDatas().size();
 
-            time.addData(time.getDatas().get(time.getDatas().size() - 1) + te);
             dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) + 0);
             this.nbPoint++;
 
-            for (double t = 0; t <= this.duration; t = t + te) {
-                time.addData(time.getDatas().get(time.getDatas().size() - 1) + te);
-                if (t <= tpsRampe) {
+            for (int i = 1; i <= nPoint; i++) {
+                if (i <= nPointRampe) {
                     dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) + gradient);
-                } else if (t > tpsRampe && t <= tpsRampe + tPlateau) {
+                } else if (i > nPointRampe && i <= nPoint - nPointRampe) {
                     dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) + 0);
                 } else {
                     dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) - gradient);
@@ -37,11 +41,13 @@ public final class Trapeze extends Element {
             }
 
             this.lastIndex = dataset.getDatas().size() - 1;
-
-            this.t1 = time.getDatas().get(firstIndex);
-            this.t2 = time.getDatas().get(lastIndex);
         }
 
+    }
+
+    @Override
+    public double DiffEndFromBeginValue() {
+        return 0;
     }
 
 }

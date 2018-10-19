@@ -4,23 +4,31 @@
 package form;
 
 import form.Cycle.Dataset;
+import form.Cycle.Time;
 
 public final class Base extends Element {
 
-    public Base(Dataset time, Dataset dataset, double duration, double amplitude) {
+    private static final long serialVersionUID = 1L;
 
-        this.duration = time.getDatas().get(time.getDatas().size() - 1);
+    public Base(Time time, Dataset dataset) {
+
+        this.duration = time.get(time.size() - 1);
         this.amplitude = Double.NEGATIVE_INFINITY;
 
         this.firstIndex = 0;
-        this.lastIndex = time.getDatas().size() - 1;
-        
+        this.lastIndex = time.size() - 1;
+
         this.t1 = 0;
-        this.t2 = time.getDatas().get(lastIndex);
+        this.t2 = time.get(lastIndex);
 
         for (double value : dataset.getDatas()) {
             this.amplitude = Math.max(amplitude, value);
         }
+    }
+
+    @Override
+    public double DiffEndFromBeginValue() {
+        return 0;
     }
 
 }

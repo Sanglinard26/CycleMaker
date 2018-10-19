@@ -7,26 +7,23 @@ import form.Cycle.Dataset;
 
 public final class Point extends Element {
 
-    public Point(Dataset time, Dataset dataset, double value) {
+    private static final long serialVersionUID = 1L;
+
+    public Point(Dataset dataset, double value) {
 
         this.duration = 0;
         this.amplitude = 0;
         this.nbPoint = 1;
 
-        if (time.getDatas().isEmpty()) {
-            time.addData(0d); // C'est le point de depart du cycle
-        } else {
-            time.addData(time.getDatas().get(time.getDatas().size() - 1) + 0);
-        }
-
         dataset.addData(value);
 
         this.firstIndex = dataset.getDatas().size() - 1;
         this.lastIndex = this.firstIndex;
+    }
 
-        this.t1 = time.getDatas().get(firstIndex);
-        this.t2 = time.getDatas().get(lastIndex);
-
+    @Override
+    public double DiffEndFromBeginValue() {
+        return 0;
     }
 
 }

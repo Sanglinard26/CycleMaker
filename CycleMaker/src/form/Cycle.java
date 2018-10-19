@@ -5,10 +5,17 @@ package form;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,23 +23,41 @@ import observer.Observable;
 import observer.Observateur;
 import utils.Utilitaire;
 
-public final class Cycle implements Observable {
+public final class Cycle implements Observable, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private String name;
     private List<Dataset> datasets;
-    private Dataset time;
+    private Time baseTime;
 
-    private List<Observateur> listObservateur = new ArrayList<Observateur>();
+    private transient List<Observateur> listObservateur = new ArrayList<Observateur>();
 
     public Cycle(File file) {
-        parse(file);
+
+        if (Utilitaire.getExtension(file).equals("cycle")) {
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                Cycle cycle = (Cycle) ois.readObject();
+                this.name = cycle.getName();
+                this.datasets = cycle.getDatasets();
+                this.baseTime = cycle.getTime();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        } else {
+            parse(file);
+        }
+
     }
 
     public Cycle(String name, String grandeurs) {
         this.name = name;
         this.datasets = new ArrayList<Dataset>();
-        this.addDataset("Temps");
-        this.time = this.getDataset("Temps");
+        this.baseTime = new Time();
 
         for (String grandeur : grandeurs.split(",")) {
             this.addDataset(grandeur.trim());
@@ -44,6 +69,7 @@ public final class Cycle implements Observable {
         try (BufferedReader bf = new BufferedReader(new FileReader(file))) {
 
             this.name = Utilitaire.getFileNameWithoutExtension(file);
+            this.baseTime = new Time();
 
             String line;
             String[] splitLine;
@@ -56,14 +82,21 @@ public final class Cycle implements Observable {
                 if (cntLine > 0) {
 
                     for (int idxCol = 0; idxCol < splitLine.length; idxCol++) {
-                        this.datasets.get(idxCol).addData(Double.parseDouble(splitLine[idxCol].trim()));
+                        if (idxCol == 0) {
+                            this.baseTime.add(Double.parseDouble(splitLine[idxCol].trim()));
+                        } else {
+                            this.datasets.get(idxCol - 1).addData(Double.parseDouble(splitLine[idxCol].trim()));
+                        }
+
                     }
 
                 } else {
-                    datasets = new ArrayList<Dataset>(splitLine.length);
+                    datasets = new ArrayList<Dataset>(splitLine.length - 1);
 
                     for (String nameDataset : splitLine) {
-                        this.datasets.add(new Dataset(nameDataset));
+                        if (!nameDataset.equals("Temps")) {
+                            this.datasets.add(new Dataset(nameDataset));
+                        }
                     }
                 }
 
@@ -72,9 +105,9 @@ public final class Cycle implements Observable {
 
             for (Dataset dataset : this.datasets) {
                 if ("Temps".equals(dataset.getName())) {
-                    time = dataset;
+                    this.baseTime = new Time();
                 } else {
-                    dataset.addElement(new Base(time, dataset, 0, 0));
+                    addElementToDataset(dataset, new Base(this.baseTime, dataset));
                 }
             }
 
@@ -89,28 +122,48 @@ public final class Cycle implements Observable {
 
         try (PrintWriter writer = new PrintWriter(file)) {
 
-            for (int numDataset = 0; numDataset < this.datasets.size(); numDataset++) {
-                if (numDataset != this.datasets.size() - 1) {
+            long start = System.currentTimeMillis();
+
+            final int nbDataset = getNbDataset();
+            int nbPoint = Integer.MAX_VALUE;
+
+            final DecimalFormat decimalFormat = new DecimalFormat("#.##"); // Formatage des valeurs avec deux decimales
+            final DecimalFormatSymbols dfs = decimalFormat.getDecimalFormatSymbols();
+
+            dfs.setDecimalSeparator('.');
+            decimalFormat.setDecimalFormatSymbols(dfs);
+
+            writer.print("Temps" + "\t");
+
+            for (int numDataset = 0; numDataset < nbDataset; numDataset++) {
+                if (numDataset != nbDataset - 1) {
                     writer.print(this.datasets.get(numDataset).getName() + "\t");
                 } else {
                     writer.println(this.datasets.get(numDataset).getName());
                 }
+
+                nbPoint = Math.min(nbPoint, this.datasets.get(numDataset).getNbPoint());
             }
 
-            for (int numPoint = 0; numPoint < this.time.getDatas().size(); numPoint++) {
-                for (int numDataset = 0; numDataset < this.datasets.size(); numDataset++) {
-                    if (numDataset != this.datasets.size() - 1) {
-                        writer.print(this.datasets.get(numDataset).getDatas().get(numPoint) + "\t");
+            for (int numPoint = 0; numPoint < nbPoint; numPoint++) {
+                writer.print(decimalFormat.format(this.baseTime.get(numPoint)) + "\t");
+                for (int numDataset = 0; numDataset < nbDataset; numDataset++) {
+                    if (numDataset != nbDataset - 1) {
+                        writer.print(decimalFormat.format(this.datasets.get(numDataset).getDatas().get(numPoint)) + "\t");
                     } else {
-                        if (numPoint != this.time.getDatas().size() - 1) {
-                            writer.println(this.datasets.get(numDataset).getDatas().get(numPoint));
+                        if (numPoint != this.baseTime.size() - 1) {
+                            writer.println(decimalFormat.format(this.datasets.get(numDataset).getDatas().get(numPoint)));
                         } else {
-                            writer.print(this.datasets.get(numDataset).getDatas().get(numPoint));
+                            writer.print(decimalFormat.format(this.datasets.get(numDataset).getDatas().get(numPoint)));
                         }
 
                     }
                 }
             }
+
+            serialize(file);
+
+            System.out.println(System.currentTimeMillis() - start);
 
             return true;
 
@@ -119,6 +172,18 @@ public final class Cycle implements Observable {
         }
 
         return false;
+    }
+
+    public final void serialize(File file) {
+
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file.getAbsolutePath().replace(".txt", ".cycle")))) {
+            oos.writeObject(this);
+            oos.flush();
+        } catch (FileNotFoundException e1) {
+            e1.printStackTrace();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
     }
 
     public String getName() {
@@ -140,6 +205,10 @@ public final class Cycle implements Observable {
         return datasets;
     }
 
+    public final int getNbDataset() {
+        return datasets.size();
+    }
+
     public final Dataset getDataset(String name) {
         for (Dataset dataset : this.datasets) {
             if (dataset.equals(name)) {
@@ -149,11 +218,11 @@ public final class Cycle implements Observable {
         return null;
     }
 
-    public final Dataset getTime() {
-        if (this.time != null) {
-            return this.time;
+    public final Time getTime() {
+        if (this.baseTime != null) {
+            return this.baseTime;
         }
-        return new Dataset("Temps");
+        return new Time();
     }
 
     @Override
@@ -162,7 +231,13 @@ public final class Cycle implements Observable {
     }
 
     public final void addElementToDataset(Dataset dataset, Element form) {
+
         dataset.addElement(form);
+        this.baseTime.addData();
+
+        form.setT1(this.baseTime.get(form.getFirstIndex()));
+        form.setT2(this.baseTime.get(form.getLastIndex()));
+
         updateObservateur("Chart");
     }
 
@@ -170,16 +245,13 @@ public final class Cycle implements Observable {
 
         final int idx1 = form.getFirstIndex();
         final int idx2 = form.getLastIndex();
-        final double removeDuration = form.getDuration();
-        final double removeAmplitude = form.getAmplitude();
+        final double removeAmplitude = form.DiffEndFromBeginValue();
         final int removeNbPoint = form.getNbPoint();
 
         dataset.removeElement(form);
 
-        for (int i = idx1; i < this.time.getDatas().size(); i++) {
-            double timeValue = this.time.getDatas().get(i);
+        for (int i = idx1; i < dataset.getDatas().size(); i++) {
             double value = dataset.getDatas().get(i);
-            this.time.getDatas().set(i, Math.max(0, timeValue - removeDuration));
             dataset.getDatas().set(i, value - removeAmplitude);
         }
 
@@ -192,8 +264,8 @@ public final class Cycle implements Observable {
                 element.setFirstIndex(Math.max(0, firstIndex - removeNbPoint));
                 element.setLastIndex(Math.max(0, lastIndex - removeNbPoint));
 
-                element.setT1(this.time.getDatas().get(element.getFirstIndex()));
-                element.setT2(this.time.getDatas().get(element.getLastIndex()));
+                element.setT1(this.baseTime.get(element.getFirstIndex()));
+                element.setT2(this.baseTime.get(element.getLastIndex()));
             }
 
         }
@@ -201,7 +273,9 @@ public final class Cycle implements Observable {
         updateObservateur("Chart");
     }
 
-    public final class Dataset {
+    public final class Dataset implements Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         private String name;
         private List<Double> datas;
@@ -219,10 +293,14 @@ public final class Cycle implements Observable {
 
         private final void addElement(Element element) {
             this.elements.add(element);
+            element.setPosition(this.elements.size());
         }
 
         private final void removeElement(Element element) {
             this.elements.remove(element);
+            for (int pos = 0; pos < this.elements.size(); pos++) {
+                this.elements.get(pos).setPosition(pos + 1);
+            }
         }
 
         public String getName() {
@@ -231,6 +309,10 @@ public final class Cycle implements Observable {
 
         public List<Double> getDatas() {
             return datas;
+        }
+
+        public int getNbPoint() {
+            return datas.size();
         }
 
         public List<Element> getElements() {
@@ -244,8 +326,39 @@ public final class Cycle implements Observable {
 
         @Override
         public boolean equals(Object obj) {
-            return this.name.equals(obj.toString());
+            return obj != null ? this.name.equals(obj.toString()) : false;
         }
+    }
+
+    public final class Time extends ArrayList<Double> {
+
+        private static final long serialVersionUID = 1L;
+
+        public Time() {
+            super();
+        }
+
+        public void addData() {
+
+            int nbPoint = 0;
+            int diffPoint = 0;
+
+            if (isEmpty()) {
+                add(0d);
+            }
+
+            for (Dataset dataset : datasets) {
+                nbPoint = Math.max(nbPoint, dataset.getNbPoint());
+            }
+
+            diffPoint = nbPoint - size();
+
+            while (diffPoint-- > 0) {
+                add(get(size() - 1) + Element.te);
+            }
+
+        }
+
     }
 
     @Override

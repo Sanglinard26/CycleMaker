@@ -4,6 +4,7 @@
 package gui;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -14,16 +15,18 @@ import java.awt.event.ActionListener;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
 
 import form.Creneau;
 import form.Cycle;
@@ -39,12 +42,15 @@ public final class PanelCreation extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
+    final String ICON_ADD = "/icon_add_24.png";
+    final String ICON_DEL = "/icon_del_24.png";
+
     private static final GridBagConstraints gbc = new GridBagConstraints();
 
     private final JLabel labelType, iconElement;
-    private final JButton btDel, btAdd;
-    private final JList<Element> listElement;
-    private final DefaultListModel<Element> dataModel;
+    private final JButton btDel, btAdd, btAddDataset;
+    private final DefaultTableModel modelElement;
+    private final JTable tableElement;
     private final JComboBox<Dataset> comboBox;
     private final DefaultComboBoxModel<Dataset> comboBoxModel;
     private final JTextField txtValue, txtDuration, txtAmplitude, txtTpsRampe, txtFrequence, txtNbRepetition;
@@ -65,7 +71,7 @@ public final class PanelCreation extends JPanel {
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.CENTER;
         add(labelType, gbc);
 
@@ -76,7 +82,7 @@ public final class PanelCreation extends JPanel {
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.CENTER;
         add(new JLabel("Grandeur(s)"), gbc);
 
@@ -95,12 +101,19 @@ public final class PanelCreation extends JPanel {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                dataModel.clear();
+                modelElement.getDataVector().clear();
+                modelElement.fireTableDataChanged();
 
-                if (!comboBox.getSelectedItem().toString().isEmpty()) {
+                if (comboBoxModel.getSize() > 0 && !comboBox.getSelectedItem().toString().isEmpty()) {
                     for (Element element : cycle.getDataset(comboBox.getSelectedItem().toString()).getElements()) {
-                        dataModel.addElement(element);
+                        modelElement.addRow(new Object[] { element.getPosition(), element });
 
+                    }
+                }
+
+                for (Component component : PanelCreation.this.getComponents()) {
+                    if (component instanceof JTextField && component.isEnabled()) {
+                        ((JTextField) component).setText(null);
                     }
                 }
 
@@ -108,123 +121,167 @@ public final class PanelCreation extends JPanel {
         });
         add(comboBox, gbc);
 
-        gbc.fill = GridBagConstraints.VERTICAL;
-        gbc.gridx = 2;
-        gbc.gridy = 2;
-        gbc.gridwidth = 1;
-        gbc.gridheight = 1;
-        gbc.weightx = 0;
-        gbc.weighty = 0;
-        gbc.insets = new Insets(20, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
-        add(new JLabel("Element(s)"), gbc);
-
-        dataModel = new DefaultListModel<>();
-        listElement = new JList<>(dataModel);
-        listElement.setFixedCellWidth(80);
-        listElement.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridx = 2;
-        gbc.gridy = 3;
-        gbc.gridwidth = 1;
-        gbc.gridheight = 7;
-        gbc.weightx = 1;
-        gbc.weighty = 1;
-        gbc.insets = new Insets(0, 0, 10, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
-        final JScrollPane scrollPane = new JScrollPane(listElement, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        add(scrollPane, gbc);
-
-        btAdd = new JButton(new AbstractAction("Ajouter element") {
+        btAddDataset = new JButton(new AbstractAction("<html><b>+</b></html>") {
 
             private static final long serialVersionUID = 1L;
 
             @Override
             public void actionPerformed(ActionEvent e) {
-
-                Element newElement = null;
-                final Dataset time = cycle.getDataset("Temps");
-                final Dataset grandeur = cycle.getDataset(comboBox.getSelectedItem().toString());
-
-                int cnt = 1;
-
-                do {
-
-                    switch (selectedForm) {
-                    case Element.POINT:
-                        newElement = new Point(time, grandeur, getDoubleValue(txtValue.getText()));
-                        break;
-                    case Element.CRENEAU:
-                        newElement = new Creneau(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
-                        break;
-                    case Element.STATIONNAIRE:
-                        newElement = new Stationnaire(time, grandeur, getDoubleValue(txtDuration.getText()));
-                        break;
-                    case Element.RAMPE:
-                        newElement = new Rampe(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
-                        break;
-                    case Element.SINUS:
-                        newElement = new Sinus(time, grandeur, getDoubleValue(txtAmplitude.getText()), getDoubleValue(txtFrequence.getText()));
-                        break;
-                    case Element.TRAPEZE:
-                        newElement = new Trapeze(time, grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtTpsRampe.getText()),
-                                getDoubleValue(txtAmplitude.getText()));
-                        break;
-                    }
-
-                    if (!time.getDatas().isEmpty() && newElement != null) {
-                        cycle.addElementToDataset(grandeur, newElement);
-                        dataModel.addElement(grandeur.getElements().get(grandeur.getElements().size() - 1));
-                    } else {
-                        newElement = null;
-                    }
-
-                    cnt++;
-                } while (cnt <= Math.max(1, getDoubleValue(txtNbRepetition.getText())));
-
-            }
-        });
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.gridx = 0;
-        gbc.gridy = 10;
-        gbc.gridwidth = 2;
-        gbc.gridheight = 1;
-        gbc.weightx = 0;
-        gbc.weighty = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.NORTH;
-        add(btAdd, gbc);
-
-        btDel = new JButton(new AbstractAction("Supprimer element") {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Element selectedElement = listElement.getSelectedValue();
-
-                if (selectedElement != null) {
-                    dataModel.removeElement(selectedElement);
-
-                    for (int i = selectedElement.getLastIndex(); i >= selectedElement.getFirstIndex(); i--) {
-                        cycle.getDataset(comboBox.getSelectedItem().toString()).getDatas().remove(i);
-                        cycle.getTime().getDatas().remove(i);
-                    }
-
-                    cycle.removeElementFromDataset(cycle.getDataset(comboBox.getSelectedItem().toString()), selectedElement);
+                String name = JOptionPane.showInputDialog("Nom de la grandeur :");
+                if (name != null && !name.isEmpty()) {
+                    cycle.addDataset(name);
+                    fillDataset();
                 }
 
             }
         });
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 2;
-        gbc.gridy = 10;
+        gbc.gridy = 1;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.anchor = GridBagConstraints.WEST;
+        add(btAddDataset, gbc);
+
+        modelElement = new DefaultTableModel(new String[] { "POSITION", "ELEMENT" }, 0);
+        tableElement = new JTable(modelElement);
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0;
+        gbc.gridy = 11;
+        gbc.gridwidth = 4;
+        gbc.gridheight = 1;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.CENTER;
+        final JScrollPane scrollPane = new JScrollPane(tableElement, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        add(scrollPane, gbc);
+        tableElement.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (modelElement.getRowCount() > 0 && !e.getValueIsAdjusting() && tableElement.getSelectedRowCount() > 0) {
+
+                    PanelCreation.this.firePropertyChange("selectedElement", null, modelElement.getValueAt(tableElement.getSelectedRow(), 1));
+                }
+
+            }
+        });
+
+        btAdd = new JButton(new AbstractAction("", new ImageIcon(getClass().getResource(ICON_ADD))) {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                Thread thread = new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+
+                        Element newElement = null;
+                        final Dataset grandeur = cycle.getDataset(comboBox.getSelectedItem().toString());
+
+                        int cnt = 1;
+                        double nbRepet = getDoubleValue(txtNbRepetition.getText());
+
+                        if (selectedForm != null) {
+                            do {
+
+                                switch (selectedForm) {
+                                case Element.POINT:
+                                    newElement = new Point(grandeur, getDoubleValue(txtValue.getText()));
+                                    break;
+                                case Element.CRENEAU:
+                                    newElement = new Creneau(grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
+                                    break;
+                                case Element.STATIONNAIRE:
+                                    newElement = new Stationnaire(grandeur, getDoubleValue(txtDuration.getText()));
+                                    break;
+                                case Element.RAMPE:
+                                    newElement = new Rampe(grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
+                                    break;
+                                case Element.SINUS:
+                                    newElement = new Sinus(grandeur, getDoubleValue(txtAmplitude.getText()), getDoubleValue(txtFrequence.getText()));
+                                    break;
+                                case Element.TRAPEZE:
+                                    newElement = new Trapeze(grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtTpsRampe.getText()),
+                                            getDoubleValue(txtAmplitude.getText()));
+                                    break;
+                                }
+
+                                if (newElement != null) {
+                                    cycle.addElementToDataset(grandeur, newElement);
+                                    modelElement.addRow(new Object[] { newElement.getPosition(), newElement });
+                                }
+
+                                cnt++;
+                            } while (cnt <= Math.max(1, nbRepet));
+                        }
+
+                    }
+                });
+
+                thread.start();
+
+            }
+        });
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0;
+        gbc.gridy = 9;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 1;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(btAdd, gbc);
+
+        btDel = new JButton(new AbstractAction("", new ImageIcon(getClass().getResource(ICON_DEL))) {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int[] selectedIdx = tableElement.getSelectedRows();
+
+                if (selectedIdx.length > 0) {
+
+                    for (int nElement = selectedIdx.length - 1; nElement > -1; nElement--) {
+
+                        Element selectedElement = cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().get(selectedIdx[nElement]);
+
+                        for (int i = selectedElement.getLastIndex(); i >= selectedElement.getFirstIndex(); i--) {
+                            cycle.getDataset(comboBox.getSelectedItem().toString()).getDatas().remove(i);
+                        }
+
+                        cycle.removeElementFromDataset(cycle.getDataset(comboBox.getSelectedItem().toString()), selectedElement);
+
+                        modelElement.removeRow(selectedIdx[nElement]);
+
+                    }
+
+                    for (int i = 0; i < cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().size(); i++) {
+                        modelElement.setValueAt(cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().get(i).getPosition(), i, 0);
+                    }
+
+                }
+
+            }
+        });
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 1;
+        gbc.gridy = 9;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 1;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.anchor = GridBagConstraints.CENTER;
         add(btDel, gbc);
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -234,7 +291,7 @@ public final class PanelCreation extends JPanel {
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        gbc.insets = new Insets(20, 0, 0, 0);
+        gbc.insets = new Insets(20, 10, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
         add(new JLabel("<html><u>Parametres : </u></html>"), gbc);
 
@@ -245,7 +302,7 @@ public final class PanelCreation extends JPanel {
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
         add(new JLabel("Valeur du point : "), gbc);
 
@@ -269,7 +326,7 @@ public final class PanelCreation extends JPanel {
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
         add(new JLabel("Duree : "), gbc);
 
@@ -293,7 +350,7 @@ public final class PanelCreation extends JPanel {
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
         add(new JLabel("Amplitude : "), gbc);
 
@@ -317,7 +374,7 @@ public final class PanelCreation extends JPanel {
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
         add(new JLabel("Duree de la rampe : "), gbc);
 
@@ -341,7 +398,7 @@ public final class PanelCreation extends JPanel {
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
         add(new JLabel("Frequence : "), gbc);
 
@@ -365,7 +422,7 @@ public final class PanelCreation extends JPanel {
         gbc.gridheight = 1;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.NORTHWEST;
         add(new JLabel("Nombre de repetition : "), gbc);
 
@@ -383,17 +440,17 @@ public final class PanelCreation extends JPanel {
         add(txtNbRepetition, gbc);
 
         gbc.fill = GridBagConstraints.NONE;
-        gbc.gridx = 0;
-        gbc.gridy = 9;
-        gbc.gridwidth = 2;
-        gbc.gridheight = 1;
+        gbc.gridx = 3;
+        gbc.gridy = 2;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 8;
         gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.CENTER;
         iconElement = new JLabel();
-        iconElement.setMinimumSize(new Dimension(200, 140));
-        iconElement.setPreferredSize(new Dimension(200, 140));
+        iconElement.setMinimumSize(new Dimension(200, 200));
+        iconElement.setPreferredSize(new Dimension(200, 200));
         iconElement.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         add(iconElement, gbc);
 
@@ -486,12 +543,17 @@ public final class PanelCreation extends JPanel {
         this.cycle = cycle;
     }
 
-    public final void fillDataset(Cycle cycle) {
+    public final void fillDataset() {
+        comboBoxModel.removeAllElements();
         for (Dataset dataset : cycle.getDatasets()) {
             if (comboBoxModel.getIndexOf(dataset) < 0 && !"Temps".equals(dataset.getName())) {
                 comboBoxModel.addElement(dataset);
             }
         }
+    }
+
+    public final int getIndexDataset() {
+        return comboBox.getSelectedIndex();
     }
 
 }
