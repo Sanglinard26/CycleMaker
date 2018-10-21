@@ -179,6 +179,8 @@ public final class Ihm extends JFrame implements Observateur {
         content.add(panelCreation, BorderLayout.EAST);
 
         pack();
+        
+        panelCreation.setVisible(false);
 
         setLocationRelativeTo(null);
         setVisible(true);

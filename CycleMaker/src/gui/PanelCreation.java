@@ -11,6 +11,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.NumberFormat;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -18,15 +19,15 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.text.NumberFormatter;
 
 import form.Creneau;
 import form.Cycle;
@@ -49,11 +50,12 @@ public final class PanelCreation extends JPanel {
 
     private final JLabel labelType, iconElement;
     private final JButton btDel, btAdd, btAddDataset;
-    private final DefaultTableModel modelElement;
-    private final JTable tableElement;
+    private final ElementModel modelElement;
+    private final TableElement tableElement;
     private final JComboBox<Dataset> comboBox;
     private final DefaultComboBoxModel<Dataset> comboBoxModel;
     private final JTextField txtValue, txtDuration, txtAmplitude, txtTpsRampe, txtFrequence, txtNbRepetition;
+    private final JTextField txtPosition;
 
     private Cycle cycle;
     private String selectedForm;
@@ -93,20 +95,20 @@ public final class PanelCreation extends JPanel {
         gbc.gridy = 1;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
-        gbc.weightx = 0;
+        gbc.weightx = 1;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.anchor = GridBagConstraints.EAST;
         comboBox.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                modelElement.getDataVector().clear();
-                modelElement.fireTableDataChanged();
+                modelElement.clearList();
 
                 if (comboBoxModel.getSize() > 0 && !comboBox.getSelectedItem().toString().isEmpty()) {
                     for (Element element : cycle.getDataset(comboBox.getSelectedItem().toString()).getElements()) {
-                        modelElement.addRow(new Object[] { element.getPosition(), element });
+                        //modelElement.addRow(new Object[] { element.getPosition(), element });
+                    	modelElement.addElement(element);
 
                     }
                 }
@@ -146,8 +148,8 @@ public final class PanelCreation extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
         add(btAddDataset, gbc);
 
-        modelElement = new DefaultTableModel(new String[] { "POSITION", "ELEMENT" }, 0);
-        tableElement = new JTable(modelElement);
+        tableElement = new TableElement();
+        modelElement = (ElementModel) tableElement.getModel();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0;
         gbc.gridy = 11;
@@ -215,8 +217,16 @@ public final class PanelCreation extends JPanel {
                                 }
 
                                 if (newElement != null) {
-                                    cycle.addElementToDataset(grandeur, newElement);
-                                    modelElement.addRow(new Object[] { newElement.getPosition(), newElement });
+                                    
+                                    if(txtPosition.getText().isEmpty())
+                                    {
+                                    	cycle.addElementToDataset(grandeur, newElement);
+                                    	modelElement.addElement(newElement);
+                                    }else{
+                                    	cycle.addElementToDataset(grandeur, Integer.parseInt(txtPosition.getText())-1, newElement);
+                                    	modelElement.addElement(Integer.parseInt(txtPosition.getText())-1, newElement);
+                                    }
+                                    
                                 }
 
                                 cnt++;
@@ -261,20 +271,21 @@ public final class PanelCreation extends JPanel {
 
                         cycle.removeElementFromDataset(cycle.getDataset(comboBox.getSelectedItem().toString()), selectedElement);
 
-                        modelElement.removeRow(selectedIdx[nElement]);
+                        //modelElement.removeRow(selectedIdx[nElement]);
+                        modelElement.removeElement(selectedIdx[nElement]);
 
                     }
 
-                    for (int i = 0; i < cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().size(); i++) {
-                        modelElement.setValueAt(cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().get(i).getPosition(), i, 0);
-                    }
+                    //for (int i = 0; i < cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().size(); i++) {
+                        //modelElement.setValueAt(cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().get(i).getPosition(), i, 0);
+                    //}
 
                 }
 
             }
         });
         gbc.fill = GridBagConstraints.NONE;
-        gbc.gridx = 1;
+        gbc.gridx = 2;
         gbc.gridy = 9;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
@@ -438,6 +449,29 @@ public final class PanelCreation extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.NORTHWEST;
         add(txtNbRepetition, gbc);
+        
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0;
+        gbc.gridy = 10;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 1;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(0, 10, 0, 0);
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        add(new JLabel("Position : "), gbc);
+        
+        txtPosition = new JTextField(5);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 1;
+        gbc.gridy = 10;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 1;
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        add(txtPosition, gbc);
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 3;
@@ -454,7 +488,7 @@ public final class PanelCreation extends JPanel {
         iconElement.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         add(iconElement, gbc);
 
-        setVisible(false);
+        setVisible(true);
     }
 
     public final void configure(Cycle cycle, String forme) {

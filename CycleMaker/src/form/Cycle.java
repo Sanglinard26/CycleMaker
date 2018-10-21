@@ -233,7 +233,35 @@ public final class Cycle implements Observable, Serializable {
     public final void addElementToDataset(Dataset dataset, Element form) {
 
         dataset.addElement(form);
-        this.baseTime.addData();
+        this.baseTime.update();
+
+        form.setT1(this.baseTime.get(form.getFirstIndex()));
+        form.setT2(this.baseTime.get(form.getLastIndex()));
+
+        updateObservateur("Chart");
+    }
+    
+    public final void addElementToDataset(Dataset dataset,int position, Element form) {
+    	
+    	
+        final double removeAmplitude = form.DiffEndFromBeginValue();
+        
+        final Element previousElement = dataset.getElements().get(position-1);
+        int lastIdxPrev = previousElement.getLastIndex();
+
+        dataset.addElement(position, form);
+        
+        for(int nElement = position; nElement < dataset.getElements().size()-1; nElement++)
+        {
+        	Element thisElement = dataset.getElements().get(nElement);
+        	
+        	thisElement.setFirstIndex(++lastIdxPrev);
+        	lastIdxPrev =+ thisElement.getNbPoint();
+        	thisElement.setLastIndex(lastIdxPrev);
+        	
+        }
+        
+        this.baseTime.update();
 
         form.setT1(this.baseTime.get(form.getFirstIndex()));
         form.setT2(this.baseTime.get(form.getLastIndex()));
@@ -295,6 +323,11 @@ public final class Cycle implements Observable, Serializable {
             this.elements.add(element);
             element.setPosition(this.elements.size());
         }
+        
+        private final void addElement(int position, Element element) {
+            this.elements.add(position, element);
+            element.setPosition(position);
+        }
 
         private final void removeElement(Element element) {
             this.elements.remove(element);
@@ -338,7 +371,7 @@ public final class Cycle implements Observable, Serializable {
             super();
         }
 
-        public void addData() {
+        public void update() {
 
             int nbPoint = 0;
             int diffPoint = 0;

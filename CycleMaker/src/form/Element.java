@@ -4,7 +4,6 @@
 package form;
 
 import java.io.Serializable;
-import java.text.NumberFormat;
 
 public abstract class Element implements Serializable {
 
@@ -98,9 +97,16 @@ public abstract class Element implements Serializable {
 
     @Override
     public String toString() {
-        final NumberFormat nf = NumberFormat.getInstance();
-
-        return this.getClass().getSimpleName() + " (" + nf.format(t1) + "s" + "-" + nf.format(t2) + "s" + ")";
+        return this.getClass().getSimpleName();
+    }
+    
+    @Override
+    public boolean equals(Object element) {
+    	
+    	double thisElement = this.toString().hashCode() + this.t1 + this.t2;
+    	double otherElement = element.toString().hashCode() + ((Element) element).getT1() + ((Element) element).getT2();
+    	
+    	return Double.compare(thisElement, otherElement) == 0;
     }
 
 }
