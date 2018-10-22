@@ -11,7 +11,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.NumberFormat;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -19,7 +18,6 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -27,7 +25,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.text.NumberFormatter;
 
 import form.Creneau;
 import form.Cycle;
@@ -107,8 +104,8 @@ public final class PanelCreation extends JPanel {
 
                 if (comboBoxModel.getSize() > 0 && !comboBox.getSelectedItem().toString().isEmpty()) {
                     for (Element element : cycle.getDataset(comboBox.getSelectedItem().toString()).getElements()) {
-                        //modelElement.addRow(new Object[] { element.getPosition(), element });
-                    	modelElement.addElement(element);
+                        // modelElement.addRow(new Object[] { element.getPosition(), element });
+                        modelElement.addElement(element);
 
                     }
                 }
@@ -217,16 +214,15 @@ public final class PanelCreation extends JPanel {
                                 }
 
                                 if (newElement != null) {
-                                    
-                                    if(txtPosition.getText().isEmpty())
-                                    {
-                                    	cycle.addElementToDataset(grandeur, newElement);
-                                    	modelElement.addElement(newElement);
-                                    }else{
-                                    	cycle.addElementToDataset(grandeur, Integer.parseInt(txtPosition.getText())-1, newElement);
-                                    	modelElement.addElement(Integer.parseInt(txtPosition.getText())-1, newElement);
+
+                                    if (txtPosition.getText().isEmpty()) {
+                                        cycle.addElementToDataset(grandeur, newElement);
+                                        modelElement.addElement(newElement);
+                                    } else {
+                                        cycle.addElementToDataset(grandeur, Integer.parseInt(txtPosition.getText()), newElement);
+                                        modelElement.addElement(Integer.parseInt(txtPosition.getText()) - 1, newElement);
                                     }
-                                    
+
                                 }
 
                                 cnt++;
@@ -271,14 +267,14 @@ public final class PanelCreation extends JPanel {
 
                         cycle.removeElementFromDataset(cycle.getDataset(comboBox.getSelectedItem().toString()), selectedElement);
 
-                        //modelElement.removeRow(selectedIdx[nElement]);
+                        // modelElement.removeRow(selectedIdx[nElement]);
                         modelElement.removeElement(selectedIdx[nElement]);
 
                     }
 
-                    //for (int i = 0; i < cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().size(); i++) {
-                        //modelElement.setValueAt(cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().get(i).getPosition(), i, 0);
-                    //}
+                    // for (int i = 0; i < cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().size(); i++) {
+                    // modelElement.setValueAt(cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().get(i).getPosition(), i, 0);
+                    // }
 
                 }
 
@@ -449,7 +445,7 @@ public final class PanelCreation extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.NORTHWEST;
         add(txtNbRepetition, gbc);
-        
+
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 0;
         gbc.gridy = 10;
@@ -460,7 +456,7 @@ public final class PanelCreation extends JPanel {
         gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.NORTHWEST;
         add(new JLabel("Position : "), gbc);
-        
+
         txtPosition = new JTextField(5);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;

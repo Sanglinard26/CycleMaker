@@ -240,31 +240,34 @@ public final class Cycle implements Observable, Serializable {
 
         updateObservateur("Chart");
     }
-    
-    public final void addElementToDataset(Dataset dataset,int position, Element form) {
-    	
-    	
+
+    public final void addElementToDataset(Dataset dataset, int position, Element form) {
+
         final double removeAmplitude = form.DiffEndFromBeginValue();
-        
-        final Element previousElement = dataset.getElements().get(position-1);
+
+        final Element previousElement = dataset.getElements().get(position - 2); // -2 car c'est une position en base 1 qui entre dans la méthode
         int lastIdxPrev = previousElement.getLastIndex();
 
         dataset.addElement(position, form);
-        
-        for(int nElement = position; nElement < dataset.getElements().size()-1; nElement++)
-        {
-        	Element thisElement = dataset.getElements().get(nElement);
-        	
-        	thisElement.setFirstIndex(++lastIdxPrev);
-        	lastIdxPrev =+ thisElement.getNbPoint();
-        	thisElement.setLastIndex(lastIdxPrev);
-        	
-        }
-        
+
         this.baseTime.update();
 
-        form.setT1(this.baseTime.get(form.getFirstIndex()));
-        form.setT2(this.baseTime.get(form.getLastIndex()));
+        for (int nElement = position - 1; nElement < dataset.getElements().size(); nElement++) {
+            Element thisElement = dataset.getElements().get(nElement);
+
+            thisElement.setFirstIndex(++lastIdxPrev);
+            lastIdxPrev += (thisElement.getNbPoint() - 1);
+            thisElement.setLastIndex(lastIdxPrev);
+
+            thisElement.setT1(this.baseTime.get(thisElement.getFirstIndex()));
+            thisElement.setT2(this.baseTime.get(thisElement.getLastIndex()));
+
+        }
+
+        // this.baseTime.update();
+
+        // form.setT1(this.baseTime.get(form.getFirstIndex()));
+        // form.setT2(this.baseTime.get(form.getLastIndex()));
 
         updateObservateur("Chart");
     }
@@ -323,10 +326,13 @@ public final class Cycle implements Observable, Serializable {
             this.elements.add(element);
             element.setPosition(this.elements.size());
         }
-        
+
         private final void addElement(int position, Element element) {
-            this.elements.add(position, element);
+            this.elements.add(position - 1, element);
             element.setPosition(position);
+            for (int pos = 0; pos < this.elements.size(); pos++) {
+                this.elements.get(pos).setPosition(pos + 1);
+            }
         }
 
         private final void removeElement(Element element) {
