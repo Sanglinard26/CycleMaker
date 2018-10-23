@@ -11,7 +11,7 @@ public final class Stationnaire extends Element {
 
     public Stationnaire(Dataset dataset, double duration) {
 
-        this.duration = duration - te;
+        this.duration = duration;
         this.amplitude = 0;
 
         final int nPoint = (int) (this.duration / te);
@@ -22,7 +22,7 @@ public final class Stationnaire extends Element {
             dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) + this.amplitude);
             this.nbPoint++;
 
-            for (int i = 0; i <= nPoint; i++) {
+            for (int i = 1; i <= nPoint; i++) {
                 dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) + this.amplitude);
                 this.nbPoint++;
             }

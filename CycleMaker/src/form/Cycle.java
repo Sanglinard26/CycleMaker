@@ -252,6 +252,19 @@ public final class Cycle implements Observable, Serializable {
 
         this.baseTime.update();
 
+        List<Double> moveDatas = new ArrayList<Double>();
+
+        for (int nData = dataset.getElements().get(position - 1).getLastIndex(); nData >= dataset.getElements().get(position - 1)
+                .getFirstIndex(); nData--) {
+            moveDatas.add(dataset.getDatas().remove(nData));
+        }
+
+        int cnt = previousElement.getLastIndex();
+
+        for (int nData = moveDatas.size() - 1; nData >= 0; nData--) {
+            dataset.getDatas().add(++cnt, moveDatas.get(nData));
+        }
+
         for (int nElement = position - 1; nElement < dataset.getElements().size(); nElement++) {
             Element thisElement = dataset.getElements().get(nElement);
 
@@ -263,11 +276,6 @@ public final class Cycle implements Observable, Serializable {
             thisElement.setT2(this.baseTime.get(thisElement.getLastIndex()));
 
         }
-
-        // this.baseTime.update();
-
-        // form.setT1(this.baseTime.get(form.getFirstIndex()));
-        // form.setT2(this.baseTime.get(form.getLastIndex()));
 
         updateObservateur("Chart");
     }

@@ -11,7 +11,7 @@ public final class Creneau extends Element {
 
     public Creneau(Dataset dataset, double duration, double amplitude) {
 
-        this.duration = duration - te;
+        this.duration = duration;
         this.amplitude = amplitude;
 
         final int nPoint = (int) (this.duration / te);
@@ -26,7 +26,7 @@ public final class Creneau extends Element {
             dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) + amplitude);
             this.nbPoint++;
 
-            for (int i = 0; i <= nPoint; i++) {
+            for (int i = 2; i <= nPoint; i++) {
                 dataset.addData(dataset.getDatas().get(dataset.getDatas().size() - 1) + 0);
                 this.nbPoint++;
             }
