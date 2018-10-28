@@ -22,7 +22,6 @@ public final class TableElement extends JTable {
 	public TableModel getModel() {
 		return super.getModel();
 	}
-
 }
 
 

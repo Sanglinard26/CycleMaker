@@ -25,406 +25,404 @@ import utils.Utilitaire;
 
 public final class Cycle implements Observable, Serializable {
 
-    private static final long serialVersionUID = 1L;
-
-    private String name;
-    private List<Dataset> datasets;
-    private Time baseTime;
+	private static final long serialVersionUID = 1L;
 
-    private transient List<Observateur> listObservateur = new ArrayList<Observateur>();
+	private String name;
+	private List<Dataset> datasets;
+	private Time baseTime;
 
-    public Cycle(File file) {
+	private transient List<Observateur> listObservateur = new ArrayList<Observateur>();
 
-        if (Utilitaire.getExtension(file).equals("cycle")) {
-            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                Cycle cycle = (Cycle) ois.readObject();
-                this.name = cycle.getName();
-                this.datasets = cycle.getDatasets();
-                this.baseTime = cycle.getTime();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        } else {
-            parse(file);
-        }
-
-    }
-
-    public Cycle(String name, String grandeurs) {
-        this.name = name;
-        this.datasets = new ArrayList<Dataset>();
-        this.baseTime = new Time();
-
-        for (String grandeur : grandeurs.split(",")) {
-            this.addDataset(grandeur.trim());
-        }
-    }
-
-    private final void parse(File file) {
+	public Cycle(File file) {
 
-        try (BufferedReader bf = new BufferedReader(new FileReader(file))) {
+		if (Utilitaire.getExtension(file).equals("cycle")) {
+			try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+				Cycle cycle = (Cycle) ois.readObject();
+				this.name = cycle.getName();
+				this.datasets = cycle.getDatasets();
+				this.baseTime = cycle.getTime();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+		} else {
+			parse(file);
+		}
+
+	}
 
-            this.name = Utilitaire.getFileNameWithoutExtension(file);
-            this.baseTime = new Time();
-
-            String line;
-            String[] splitLine;
-            int cntLine = 0;
+	public Cycle(String name, String grandeurs) {
+		this.name = name;
+		this.datasets = new ArrayList<Dataset>();
+		this.baseTime = new Time();
+
+		for (String grandeur : grandeurs.split(",")) {
+			this.addDataset(grandeur.trim());
+		}
+	}
 
-            while ((line = bf.readLine()) != null) {
+	private final void parse(File file) {
 
-                splitLine = line.split("\t");
+		try (BufferedReader bf = new BufferedReader(new FileReader(file))) {
 
-                if (cntLine > 0) {
+			this.name = Utilitaire.getFileNameWithoutExtension(file);
+			this.baseTime = new Time();
 
-                    for (int idxCol = 0; idxCol < splitLine.length; idxCol++) {
-                        if (idxCol == 0) {
-                            this.baseTime.add(Double.parseDouble(splitLine[idxCol].trim()));
-                        } else {
-                            this.datasets.get(idxCol - 1).addData(Double.parseDouble(splitLine[idxCol].trim()));
-                        }
-
-                    }
-
-                } else {
-                    datasets = new ArrayList<Dataset>(splitLine.length - 1);
-
-                    for (String nameDataset : splitLine) {
-                        if (!nameDataset.equals("Temps")) {
-                            this.datasets.add(new Dataset(nameDataset));
-                        }
-                    }
-                }
-
-                cntLine++;
-            }
-
-            for (Dataset dataset : this.datasets) {
-                if ("Temps".equals(dataset.getName())) {
-                    this.baseTime = new Time();
-                } else {
-                    addElementToDataset(dataset, new Base(this.baseTime, dataset));
-                }
-            }
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public final boolean save(File file) {
-
-        try (PrintWriter writer = new PrintWriter(file)) {
-
-            long start = System.currentTimeMillis();
-
-            final int nbDataset = getNbDataset();
-            int nbPoint = Integer.MAX_VALUE;
-
-            final DecimalFormat decimalFormat = new DecimalFormat("#.##"); // Formatage des valeurs avec deux decimales
-            final DecimalFormatSymbols dfs = decimalFormat.getDecimalFormatSymbols();
-
-            dfs.setDecimalSeparator('.');
-            decimalFormat.setDecimalFormatSymbols(dfs);
-
-            writer.print("Temps" + "\t");
-
-            for (int numDataset = 0; numDataset < nbDataset; numDataset++) {
-                if (numDataset != nbDataset - 1) {
-                    writer.print(this.datasets.get(numDataset).getName() + "\t");
-                } else {
-                    writer.println(this.datasets.get(numDataset).getName());
-                }
-
-                nbPoint = Math.min(nbPoint, this.datasets.get(numDataset).getNbPoint());
-            }
-
-            for (int numPoint = 0; numPoint < nbPoint; numPoint++) {
-                writer.print(decimalFormat.format(this.baseTime.get(numPoint)) + "\t");
-                for (int numDataset = 0; numDataset < nbDataset; numDataset++) {
-                    if (numDataset != nbDataset - 1) {
-                        writer.print(decimalFormat.format(this.datasets.get(numDataset).getDatas().get(numPoint)) + "\t");
-                    } else {
-                        if (numPoint != this.baseTime.size() - 1) {
-                            writer.println(decimalFormat.format(this.datasets.get(numDataset).getDatas().get(numPoint)));
-                        } else {
-                            writer.print(decimalFormat.format(this.datasets.get(numDataset).getDatas().get(numPoint)));
-                        }
+			String line;
+			String[] splitLine;
+			int cntLine = 0;
 
-                    }
-                }
-            }
+			while ((line = bf.readLine()) != null) {
 
-            serialize(file);
+				splitLine = line.split("\t");
 
-            System.out.println(System.currentTimeMillis() - start);
+				if (cntLine > 0) {
 
-            return true;
+					for (int idxCol = 0; idxCol < splitLine.length; idxCol++) {
+						if (idxCol == 0) {
+							this.baseTime.add(Double.parseDouble(splitLine[idxCol].trim()));
+						} else {
+							this.datasets.get(idxCol - 1).addData(Double.parseDouble(splitLine[idxCol].trim()));
+						}
 
-        } catch (Exception e) {
-            System.out.println(e);
-        }
+					}
 
-        return false;
-    }
+				} else {
+					datasets = new ArrayList<Dataset>(splitLine.length - 1);
+
+					for (String nameDataset : splitLine) {
+						if (!nameDataset.equals("Temps")) {
+							this.datasets.add(new Dataset(nameDataset));
+						}
+					}
+				}
+
+				cntLine++;
+			}
+
+			for (Dataset dataset : this.datasets) {
+				addElementToDataset(dataset, new Base(this.baseTime, dataset));
+			}
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public final boolean save(File file) {
+
+		try (PrintWriter writer = new PrintWriter(file)) {
+
+			long start = System.currentTimeMillis();
+
+			final int nbDataset = getNbDataset();
+			int nbPoint = Integer.MAX_VALUE;
+
+			final DecimalFormat decimalFormat = new DecimalFormat("#.##"); // Formatage des valeurs avec deux decimales
+			final DecimalFormatSymbols dfs = decimalFormat.getDecimalFormatSymbols();
+
+			dfs.setDecimalSeparator('.');
+			decimalFormat.setDecimalFormatSymbols(dfs);
+
+			writer.print("Temps" + "\t");
+
+			for (int numDataset = 0; numDataset < nbDataset; numDataset++) {
+				if (numDataset != nbDataset - 1) {
+					writer.print(this.datasets.get(numDataset).getName() + "\t");
+				} else {
+					writer.println(this.datasets.get(numDataset).getName());
+				}
+
+				nbPoint = Math.min(nbPoint, this.datasets.get(numDataset).getNbPoint());
+			}
+
+			for (int numPoint = 0; numPoint < nbPoint; numPoint++) {
+				writer.print(decimalFormat.format(this.baseTime.get(numPoint)) + "\t");
+				for (int numDataset = 0; numDataset < nbDataset; numDataset++) {
+					if (numDataset != nbDataset - 1) {
+						writer.print(decimalFormat.format(this.datasets.get(numDataset).getDatas().get(numPoint)) + "\t");
+					} else {
+						if (numPoint != this.baseTime.size() - 1) {
+							writer.println(decimalFormat.format(this.datasets.get(numDataset).getDatas().get(numPoint)));
+						} else {
+							writer.print(decimalFormat.format(this.datasets.get(numDataset).getDatas().get(numPoint)));
+						}
 
-    public final void serialize(File file) {
+					}
+				}
+			}
 
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file.getAbsolutePath().replace(".txt", ".cycle")))) {
-            oos.writeObject(this);
-            oos.flush();
-        } catch (FileNotFoundException e1) {
-            e1.printStackTrace();
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
-    }
+			serialize(file);
 
-    public String getName() {
-        return name;
-    }
+			System.out.println(System.currentTimeMillis() - start);
 
-    public final void addDataset(String name) {
-        if (!this.datasets.contains(new Dataset(name))) {
-            this.datasets.add(new Dataset(name));
-            updateObservateur("Dataset");
-        }
-    }
+			return true;
 
-    public final void removeDataset(Dataset dataset) {
-        this.datasets.remove(dataset);
-    }
+		} catch (Exception e) {
+			System.out.println(e);
+		}
 
-    public List<Dataset> getDatasets() {
-        return datasets;
-    }
+		return false;
+	}
 
-    public final int getNbDataset() {
-        return datasets.size();
-    }
+	public final void serialize(File file) {
 
-    public final Dataset getDataset(String name) {
-        for (Dataset dataset : this.datasets) {
-            if (dataset.equals(name)) {
-                return dataset;
-            }
-        }
-        return null;
-    }
+		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file.getAbsolutePath().replace(".txt", ".cycle")))) {
+			oos.writeObject(this);
+			oos.flush();
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
 
-    public final Time getTime() {
-        if (this.baseTime != null) {
-            return this.baseTime;
-        }
-        return new Time();
-    }
+	public String getName() {
+		return name;
+	}
 
-    @Override
-    public String toString() {
-        return this.name;
-    }
+	public final void addDataset(String name) {
+		if (!this.datasets.contains(new Dataset(name))) {
+			this.datasets.add(new Dataset(name));
+			updateObservateur("Dataset");
+		}
+	}
 
-    public final void addElementToDataset(Dataset dataset, Element form) {
+	public final void removeDataset(Dataset dataset) {
+		this.datasets.remove(dataset);
+	}
 
-        dataset.addElement(form);
-        this.baseTime.update();
+	public List<Dataset> getDatasets() {
+		return datasets;
+	}
 
-        form.setT1(this.baseTime.get(form.getFirstIndex()));
-        form.setT2(this.baseTime.get(form.getLastIndex()));
+	public final int getNbDataset() {
+		return datasets.size();
+	}
 
-        updateObservateur("Chart");
-    }
+	public final Dataset getDataset(String name) {
+		for (Dataset dataset : this.datasets) {
+			if (dataset.equals(name)) {
+				return dataset;
+			}
+		}
+		return null;
+	}
 
-    public final void addElementToDataset(Dataset dataset, int position, Element form) {
+	public final Time getTime() {
+		if (this.baseTime != null) {
+			return this.baseTime;
+		}
+		return new Time();
+	}
 
-        final double removeAmplitude = form.DiffEndFromBeginValue();
+	@Override
+	public String toString() {
+		return this.name;
+	}
 
-        final Element previousElement = dataset.getElements().get(position - 2); // -2 car c'est une position en base 1 qui entre dans la méthode
-        int lastIdxPrev = previousElement.getLastIndex();
+	public final void addElementToDataset(Dataset dataset, Element form) {
 
-        dataset.addElement(position, form);
+		dataset.addElement(form);
+		this.baseTime.update();
 
-        this.baseTime.update();
+		form.setT1(this.baseTime.get(form.getFirstIndex()));
+		form.setT2(this.baseTime.get(form.getLastIndex()));
 
-        List<Double> moveDatas = new ArrayList<Double>();
+		updateObservateur("Chart");
+	}
 
-        for (int nData = dataset.getElements().get(position - 1).getLastIndex(); nData >= dataset.getElements().get(position - 1)
-                .getFirstIndex(); nData--) {
-            moveDatas.add(dataset.getDatas().remove(nData));
-        }
+	public final void addElementToDataset(Dataset dataset, int position, Element form) {
 
-        int cnt = previousElement.getLastIndex();
 
-        for (int nData = moveDatas.size() - 1; nData >= 0; nData--) {
-            dataset.getDatas().add(++cnt, moveDatas.get(nData));
-        }
 
-        for (int nElement = position - 1; nElement < dataset.getElements().size(); nElement++) {
-            Element thisElement = dataset.getElements().get(nElement);
+		final Element previousElement = dataset.getElements().get(position - 2); // -2 car c'est une position en base 1 qui entre dans la méthode
+		int lastIdxPrev = previousElement.getLastIndex();
 
-            thisElement.setFirstIndex(++lastIdxPrev);
-            lastIdxPrev += (thisElement.getNbPoint() - 1);
-            thisElement.setLastIndex(lastIdxPrev);
+		final double removeAmplitude = dataset.getDatas().get(previousElement.getLastIndex()) - dataset.getDatas().get(form.getFirstIndex());
 
-            thisElement.setT1(this.baseTime.get(thisElement.getFirstIndex()));
-            thisElement.setT2(this.baseTime.get(thisElement.getLastIndex()));
+		dataset.addElement(position, form);
 
-        }
+		this.baseTime.update();
 
-        updateObservateur("Chart");
-    }
+		List<Double> moveDatas = new ArrayList<Double>();
 
-    public final void removeElementFromDataset(Dataset dataset, Element form) {
+		for (int nData = dataset.getElements().get(position - 1).getLastIndex(); nData >= dataset.getElements().get(position - 1)
+				.getFirstIndex(); nData--) {
+			moveDatas.add(dataset.getDatas().remove(nData));
+		}
 
-        final int idx1 = form.getFirstIndex();
-        final int idx2 = form.getLastIndex();
-        final double removeAmplitude = form.DiffEndFromBeginValue();
-        final int removeNbPoint = form.getNbPoint();
+		int cnt = previousElement.getLastIndex();
 
-        dataset.removeElement(form);
+		for (int nData = moveDatas.size() - 1; nData >= 0; nData--) {
+			dataset.getDatas().add(++cnt, moveDatas.get(nData));
+		}
 
-        for (int i = idx1; i < dataset.getDatas().size(); i++) {
-            double value = dataset.getDatas().get(i);
-            dataset.getDatas().set(i, value - removeAmplitude);
-        }
+		for (int nElement = position - 1; nElement < dataset.getElements().size(); nElement++) {
+			Element thisElement = dataset.getElements().get(nElement);
 
-        for (Element element : dataset.getElements()) {
+			thisElement.setFirstIndex(++lastIdxPrev);
+			lastIdxPrev += (thisElement.getNbPoint() - 1);
+			thisElement.setLastIndex(lastIdxPrev);
 
-            int firstIndex = element.getFirstIndex();
-            int lastIndex = element.getLastIndex();
+			thisElement.setT1(this.baseTime.get(thisElement.getFirstIndex()));
+			thisElement.setT2(this.baseTime.get(thisElement.getLastIndex()));
 
-            if (firstIndex > idx2) {
-                element.setFirstIndex(Math.max(0, firstIndex - removeNbPoint));
-                element.setLastIndex(Math.max(0, lastIndex - removeNbPoint));
+		}
 
-                element.setT1(this.baseTime.get(element.getFirstIndex()));
-                element.setT2(this.baseTime.get(element.getLastIndex()));
-            }
+		updateObservateur("Chart");
+	}
 
-        }
+	public final void removeElementFromDataset(Dataset dataset, Element form) {
 
-        updateObservateur("Chart");
-    }
+		final int idx1 = form.getFirstIndex();
+		final int idx2 = form.getLastIndex();
+		final double removeAmplitude = form.DiffEndFromBeginValue();
+		final int removeNbPoint = form.getNbPoint();
 
-    public final class Dataset implements Serializable {
+		dataset.removeElement(form);
 
-        private static final long serialVersionUID = 1L;
+		for (int i = idx1; i < dataset.getDatas().size(); i++) {
+			double value = dataset.getDatas().get(i);
+			dataset.getDatas().set(i, value - removeAmplitude);
+		}
 
-        private String name;
-        private List<Double> datas;
-        private List<Element> elements;
+		for (Element element : dataset.getElements()) {
 
-        public Dataset(String name) {
-            this.name = name;
-            this.datas = new ArrayList<Double>();
-            this.elements = new ArrayList<Element>();
-        }
+			int firstIndex = element.getFirstIndex();
+			int lastIndex = element.getLastIndex();
 
-        public final void addData(Double data) {
-            this.datas.add(data);
-        }
+			if (firstIndex > idx2) {
+				element.setFirstIndex(Math.max(0, firstIndex - removeNbPoint));
+				element.setLastIndex(Math.max(0, lastIndex - removeNbPoint));
 
-        private final void addElement(Element element) {
-            this.elements.add(element);
-            element.setPosition(this.elements.size());
-        }
+				element.setT1(this.baseTime.get(element.getFirstIndex()));
+				element.setT2(this.baseTime.get(element.getLastIndex()));
+			}
 
-        private final void addElement(int position, Element element) {
-            this.elements.add(position - 1, element);
-            element.setPosition(position);
-            for (int pos = 0; pos < this.elements.size(); pos++) {
-                this.elements.get(pos).setPosition(pos + 1);
-            }
-        }
+		}
 
-        private final void removeElement(Element element) {
-            this.elements.remove(element);
-            for (int pos = 0; pos < this.elements.size(); pos++) {
-                this.elements.get(pos).setPosition(pos + 1);
-            }
-        }
+		updateObservateur("Chart");
+	}
 
-        public String getName() {
-            return name;
-        }
+	public final class Dataset implements Serializable {
 
-        public List<Double> getDatas() {
-            return datas;
-        }
+		private static final long serialVersionUID = 1L;
 
-        public int getNbPoint() {
-            return datas.size();
-        }
+		private String name;
+		private List<Double> datas;
+		private List<Element> elements;
 
-        public List<Element> getElements() {
-            return elements;
-        }
+		public Dataset(String name) {
+			this.name = name;
+			this.datas = new ArrayList<Double>();
+			this.elements = new ArrayList<Element>();
+		}
 
-        @Override
-        public String toString() {
-            return this.name;
-        }
+		public final void addData(Double data) {
+			this.datas.add(data);
+		}
 
-        @Override
-        public boolean equals(Object obj) {
-            return obj != null ? this.name.equals(obj.toString()) : false;
-        }
-    }
+		private final void addElement(Element element) {
+			this.elements.add(element);
+			element.setPosition(this.elements.size());
+		}
 
-    public final class Time extends ArrayList<Double> {
+		private final void addElement(int position, Element element) {
+			this.elements.add(position - 1, element);
+			element.setPosition(position);
+			for (int pos = 0; pos < this.elements.size(); pos++) {
+				this.elements.get(pos).setPosition(pos + 1);
+			}
+		}
 
-        private static final long serialVersionUID = 1L;
+		private final void removeElement(Element element) {
+			this.elements.remove(element);
+			for (int pos = 0; pos < this.elements.size(); pos++) {
+				this.elements.get(pos).setPosition(pos + 1);
+			}
+		}
 
-        public Time() {
-            super();
-        }
+		public String getName() {
+			return name;
+		}
 
-        public void update() {
+		public List<Double> getDatas() {
+			return datas;
+		}
 
-            int nbPoint = 0;
-            int diffPoint = 0;
+		public int getNbPoint() {
+			return datas.size();
+		}
 
-            if (isEmpty()) {
-                add(0d);
-            }
+		public List<Element> getElements() {
+			return elements;
+		}
 
-            for (Dataset dataset : datasets) {
-                nbPoint = Math.max(nbPoint, dataset.getNbPoint());
-            }
+		@Override
+		public String toString() {
+			return this.name;
+		}
 
-            diffPoint = nbPoint - size();
+		@Override
+		public boolean equals(Object obj) {
+			return obj != null ? this.name.equals(obj.toString()) : false;
+		}
+	}
 
-            while (diffPoint-- > 0) {
-                add(get(size() - 1) + Element.te);
-            }
+	public final class Time extends ArrayList<Double> {
 
-        }
+		private static final long serialVersionUID = 1L;
 
-    }
+		public Time() {
+			super();
+		}
 
-    @Override
-    public void addObservateur(Observateur obs) {
-        this.listObservateur.add(obs);
+		public void update() {
 
-    }
+			int nbPoint = 0;
+			int diffPoint = 0;
 
-    @Override
-    public void updateObservateur(String property) {
-        for (Observateur obs : this.listObservateur) {
-            obs.update(property);
-        }
-    }
+			if (isEmpty()) {
+				add(0d);
+			}
 
-    @Override
-    public void delObservateur() {
-        this.listObservateur = new ArrayList<Observateur>();
+			for (Dataset dataset : datasets) {
+				nbPoint = Math.max(nbPoint, dataset.getNbPoint());
+			}
 
-    }
+			diffPoint = nbPoint - size();
+
+			while (diffPoint-- > 0) {
+				add(get(size() - 1) + Element.te);
+			}
+
+		}
+
+	}
+
+	@Override
+	public void addObservateur(Observateur obs) {
+		this.listObservateur.add(obs);
+
+	}
+
+	@Override
+	public void updateObservateur(String property) {
+		for (Observateur obs : this.listObservateur) {
+			obs.update(property);
+		}
+	}
+
+	@Override
+	public void delObservateur() {
+		this.listObservateur = new ArrayList<Observateur>();
+
+	}
 
 }

@@ -6,11 +6,14 @@ package gui;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -18,6 +21,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -25,6 +29,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
+import javax.swing.text.PlainDocument;
 
 import form.Creneau;
 import form.Cycle;
@@ -46,10 +54,10 @@ public final class PanelCreation extends JPanel {
     private static final GridBagConstraints gbc = new GridBagConstraints();
 
     private final JLabel labelType, iconElement;
-    private final JButton btDel, btAdd, btAddDataset;
+    private final JButton btDel, btAdd;
     private final ElementModel modelElement;
     private final TableElement tableElement;
-    private final JComboBox<Dataset> comboBox;
+    private final ComBoDataset comBoDataset;
     private final DefaultComboBoxModel<Dataset> comboBoxModel;
     private final JTextField txtValue, txtDuration, txtAmplitude, txtTpsRampe, txtFrequence, txtNbRepetition;
     private final JTextField txtPosition;
@@ -86,56 +94,9 @@ public final class PanelCreation extends JPanel {
         add(new JLabel("Grandeur(s)"), gbc);
 
         comboBoxModel = new DefaultComboBoxModel<>();
-        comboBox = new JComboBox<>(comboBoxModel);
+        comBoDataset = new ComBoDataset(comboBoxModel);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
-        gbc.gridy = 1;
-        gbc.gridwidth = 1;
-        gbc.gridheight = 1;
-        gbc.weightx = 1;
-        gbc.weighty = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.EAST;
-        comboBox.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                modelElement.clearList();
-
-                if (comboBoxModel.getSize() > 0 && !comboBox.getSelectedItem().toString().isEmpty()) {
-                    for (Element element : cycle.getDataset(comboBox.getSelectedItem().toString()).getElements()) {
-                        // modelElement.addRow(new Object[] { element.getPosition(), element });
-                        modelElement.addElement(element);
-
-                    }
-                }
-
-                for (Component component : PanelCreation.this.getComponents()) {
-                    if (component instanceof JTextField && component.isEnabled()) {
-                        ((JTextField) component).setText(null);
-                    }
-                }
-
-            }
-        });
-        add(comboBox, gbc);
-
-        btAddDataset = new JButton(new AbstractAction("<html><b>+</b></html>") {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String name = JOptionPane.showInputDialog("Nom de la grandeur :");
-                if (name != null && !name.isEmpty()) {
-                    cycle.addDataset(name);
-                    fillDataset();
-                }
-
-            }
-        });
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.gridx = 2;
         gbc.gridy = 1;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
@@ -143,14 +104,14 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
-        add(btAddDataset, gbc);
+        add(comBoDataset, gbc);
 
         tableElement = new TableElement();
         modelElement = (ElementModel) tableElement.getModel();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0;
         gbc.gridy = 11;
-        gbc.gridwidth = 4;
+        gbc.gridwidth = 3;
         gbc.gridheight = 1;
         gbc.weightx = 1;
         gbc.weighty = 1;
@@ -169,6 +130,40 @@ public final class PanelCreation extends JPanel {
 
             }
         });
+        
+        tableElement.addKeyListener(new KeyListener() {
+			
+			@Override
+			public void keyTyped(KeyEvent paramKeyEvent) {}
+			
+			@Override
+			public void keyReleased(KeyEvent paramKeyEvent) {}
+			
+			@Override
+			public void keyPressed(KeyEvent paramKeyEvent) {
+				if (paramKeyEvent.getKeyCode() == 127 && tableElement.getSelectedRowCount() > 0) // touche suppr
+		        {
+					int[] selectedIdx = tableElement.getSelectedRows();
+
+	                if (selectedIdx.length > 0) {
+
+	                    for (int nElement = selectedIdx.length - 1; nElement > -1; nElement--) {
+
+	                        Element selectedElement = cycle.getDataset(comBoDataset.getSelectedDataset().getName()).getElements().get(selectedIdx[nElement]);
+
+	                        for (int i = selectedElement.getLastIndex(); i >= selectedElement.getFirstIndex(); i--) {
+	                            cycle.getDataset(comBoDataset.getSelectedDataset().getName()).getDatas().remove(i);
+	                        }
+
+	                        cycle.removeElementFromDataset(cycle.getDataset(comBoDataset.getSelectedDataset().getName()), selectedElement);
+
+	                        modelElement.removeElement(selectedIdx[nElement]);
+
+	                    }
+	                }
+		        }
+			}
+		});
 
         btAdd = new JButton(new AbstractAction("", new ImageIcon(getClass().getResource(ICON_ADD))) {
 
@@ -183,7 +178,7 @@ public final class PanelCreation extends JPanel {
                     public void run() {
 
                         Element newElement = null;
-                        final Dataset grandeur = cycle.getDataset(comboBox.getSelectedItem().toString());
+                        final Dataset grandeur = cycle.getDataset(comBoDataset.getSelectedDataset().getName());
 
                         int cnt = 1;
                         double nbRepet = getDoubleValue(txtNbRepetition.getText());
@@ -219,8 +214,15 @@ public final class PanelCreation extends JPanel {
                                         cycle.addElementToDataset(grandeur, newElement);
                                         modelElement.addElement(newElement);
                                     } else {
-                                        cycle.addElementToDataset(grandeur, Integer.parseInt(txtPosition.getText()), newElement);
-                                        modelElement.addElement(Integer.parseInt(txtPosition.getText()) - 1, newElement);
+                                    	int position = Integer.parseInt(txtPosition.getText());
+                                    	if(position > 1 && position <= modelElement.getRowCount())
+                                    	{
+                                    		cycle.addElementToDataset(grandeur, position, newElement);
+                                            modelElement.addElement(Integer.parseInt(txtPosition.getText()) - 1, newElement);
+                                    	}else{
+                                    		JOptionPane.showMessageDialog(null, "La position demandee doit être differente de 1 et ne doit pas depassee " + modelElement.getRowCount());
+                                    	}
+                                        
                                     }
 
                                 }
@@ -259,29 +261,23 @@ public final class PanelCreation extends JPanel {
 
                     for (int nElement = selectedIdx.length - 1; nElement > -1; nElement--) {
 
-                        Element selectedElement = cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().get(selectedIdx[nElement]);
+                        Element selectedElement = cycle.getDataset(comBoDataset.getSelectedDataset().getName()).getElements().get(selectedIdx[nElement]);
 
                         for (int i = selectedElement.getLastIndex(); i >= selectedElement.getFirstIndex(); i--) {
-                            cycle.getDataset(comboBox.getSelectedItem().toString()).getDatas().remove(i);
+                            cycle.getDataset(comBoDataset.getSelectedDataset().getName()).getDatas().remove(i);
                         }
 
-                        cycle.removeElementFromDataset(cycle.getDataset(comboBox.getSelectedItem().toString()), selectedElement);
+                        cycle.removeElementFromDataset(cycle.getDataset(comBoDataset.getSelectedDataset().getName()), selectedElement);
 
-                        // modelElement.removeRow(selectedIdx[nElement]);
                         modelElement.removeElement(selectedIdx[nElement]);
 
                     }
-
-                    // for (int i = 0; i < cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().size(); i++) {
-                    // modelElement.setValueAt(cycle.getDataset(comboBox.getSelectedItem().toString()).getElements().get(i).getPosition(), i, 0);
-                    // }
-
                 }
 
             }
         });
         gbc.fill = GridBagConstraints.NONE;
-        gbc.gridx = 2;
+        gbc.gridx = 1;
         gbc.gridy = 9;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
@@ -314,13 +310,14 @@ public final class PanelCreation extends JPanel {
         add(new JLabel("Valeur du point : "), gbc);
 
         txtValue = new JTextField(10);
+        ((PlainDocument) txtValue.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.DOUBLE_NUMBER));
         txtValue.setEnabled(false);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
         gbc.gridy = 3;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
-        gbc.weightx = 1;
+        gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
@@ -338,13 +335,14 @@ public final class PanelCreation extends JPanel {
         add(new JLabel("Duree : "), gbc);
 
         txtDuration = new JTextField(10);
+        ((PlainDocument) txtDuration.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.DOUBLE_NUMBER));
         txtDuration.setEnabled(false);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
         gbc.gridy = 4;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
-        gbc.weightx = 1;
+        gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
@@ -362,13 +360,14 @@ public final class PanelCreation extends JPanel {
         add(new JLabel("Amplitude : "), gbc);
 
         txtAmplitude = new JTextField(10);
+        ((PlainDocument) txtAmplitude.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.DOUBLE_NUMBER));
         txtAmplitude.setEnabled(false);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
         gbc.gridy = 5;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
-        gbc.weightx = 1;
+        gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
@@ -386,13 +385,14 @@ public final class PanelCreation extends JPanel {
         add(new JLabel("Duree de la rampe : "), gbc);
 
         txtTpsRampe = new JTextField(10);
+        ((PlainDocument) txtTpsRampe.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.DOUBLE_NUMBER));
         txtTpsRampe.setEnabled(false);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
         gbc.gridy = 6;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
-        gbc.weightx = 1;
+        gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
@@ -410,13 +410,14 @@ public final class PanelCreation extends JPanel {
         add(new JLabel("Frequence : "), gbc);
 
         txtFrequence = new JTextField(10);
+        ((PlainDocument) txtFrequence.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.DOUBLE_NUMBER));
         txtFrequence.setEnabled(false);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
         gbc.gridy = 7;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
-        gbc.weightx = 1;
+        gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
@@ -434,13 +435,14 @@ public final class PanelCreation extends JPanel {
         add(new JLabel("Nombre de repetition : "), gbc);
 
         txtNbRepetition = new JTextField(10);
+        ((PlainDocument) txtNbRepetition.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.INTEGER_NUMBER));
         txtNbRepetition.setEnabled(false);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
         gbc.gridy = 8;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
-        gbc.weightx = 1;
+        gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.NORTHWEST;
@@ -458,19 +460,20 @@ public final class PanelCreation extends JPanel {
         add(new JLabel("Position : "), gbc);
 
         txtPosition = new JTextField(5);
+        ((PlainDocument) txtPosition.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.INTEGER_NUMBER));
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
         gbc.gridy = 10;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
-        gbc.weightx = 1;
+        gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.NORTHWEST;
         add(txtPosition, gbc);
 
         gbc.fill = GridBagConstraints.NONE;
-        gbc.gridx = 3;
+        gbc.gridx = 2;
         gbc.gridy = 2;
         gbc.gridwidth = 1;
         gbc.gridheight = 8;
@@ -494,12 +497,12 @@ public final class PanelCreation extends JPanel {
 
         labelType.setText("Type : " + forme);
 
-        txtValue.setText(null);
-        txtDuration.setText(null);
-        txtAmplitude.setText(null);
-        txtTpsRampe.setText(null);
-        txtFrequence.setText(null);
-        txtNbRepetition.setText(null);
+        txtValue.setText("");
+        txtDuration.setText("");
+        txtAmplitude.setText("");
+        txtTpsRampe.setText("");
+        txtFrequence.setText("");
+        txtNbRepetition.setText("");
 
         iconElement.setIcon(null);
 
@@ -583,7 +586,107 @@ public final class PanelCreation extends JPanel {
     }
 
     public final int getIndexDataset() {
-        return comboBox.getSelectedIndex();
+        return comBoDataset.getIndexDataset();
+    }
+    
+    private final class NumericDocument extends DocumentFilter
+    {
+    	private final String removeRegex;
+    	public static final String INTEGER_NUMBER = "Integer";
+    	public static final String DOUBLE_NUMBER = "Double";
+    	
+    	public NumericDocument(String type) {
+			if(INTEGER_NUMBER.equals(type))
+			{
+				removeRegex = "\\D";
+			}else{
+				removeRegex ="[^0-9^\\.]";
+			}
+		}
+    	
+    	@Override
+    	public void insertString(FilterBypass fb, int offset, String text, AttributeSet attr)
+    			throws BadLocationException {
+
+    		text = text.replaceAll(removeRegex, "");
+    		
+    		super.insertString(fb, offset, text, attr);
+    	}
+    	
+    	@Override
+    	public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+    			throws BadLocationException {
+
+    		text = text.replaceAll(removeRegex, "");
+    		
+    		super.replace(fb, offset, length, text, attrs);
+    	}
+    }
+    
+    private class ComBoDataset extends JComponent
+    {
+
+		private static final long serialVersionUID = 1L;
+		
+		private final JComboBox<Dataset> combo;
+    	private final JButton btAdd;
+    	
+    	public ComBoDataset(DefaultComboBoxModel<Dataset> model) {
+    		super();
+    		setOpaque(true);
+    		setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+    		
+			this.combo = new JComboBox<Dataset>(model);
+			this.combo.addActionListener(new ActionListener() {
+
+	            @Override
+	            public void actionPerformed(ActionEvent e) {
+	                modelElement.clearList();
+
+	                if (comboBoxModel.getSize() > 0 && !combo.getSelectedItem().toString().isEmpty()) {
+	                    for (Element element : cycle.getDataset(combo.getSelectedItem().toString()).getElements()) {
+	                        modelElement.addElement(element);
+
+	                    }
+	                }
+
+	                for (Component component : PanelCreation.this.getComponents()) {
+	                    if (component instanceof JTextField && component.isEnabled()) {
+	                        ((JTextField) component).setText("");
+	                    }
+	                }
+
+	            }
+	        });
+			
+			this.btAdd = new JButton(new AbstractAction("<html><b>+</b></html>") {
+
+	            private static final long serialVersionUID = 1L;
+
+	            @Override
+	            public void actionPerformed(ActionEvent e) {
+	                String name = JOptionPane.showInputDialog("Nom de la grandeur :");
+	                if (name != null && !name.isEmpty()) {
+	                    cycle.addDataset(name);
+	                    fillDataset();
+	                }
+
+	            }
+	        });
+			
+			add(this.combo);
+			add(this.btAdd);
+		}
+    	
+    	public final Dataset getSelectedDataset()
+    	{
+    		return (Dataset) this.combo.getSelectedItem();
+    	}
+    	
+    	public final int getIndexDataset()
+    	{
+    		return this.combo.getSelectedIndex();
+    	}
     }
 
 }

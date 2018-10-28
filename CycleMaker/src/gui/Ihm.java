@@ -434,7 +434,7 @@ public final class Ihm extends JFrame implements Observateur {
 
                 collections[nPlot] = new XYSeriesCollection(series[nPlot]);
                 rangeAxiss[nPlot] = new NumberAxis(selectedCycle.getDatasets().get(nPlot).getName());
-                renderers[nPlot] = new XYLineAndShapeRenderer(true, false);
+                renderers[nPlot] = new XYLineAndShapeRenderer(true, true);
                 subPlots[nPlot] = new XYPlot(collections[nPlot], null, rangeAxiss[nPlot], renderers[nPlot]);
 
                 plot.add(subPlots[nPlot], 1);
