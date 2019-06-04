@@ -9,6 +9,7 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Paint;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -17,6 +18,8 @@ import java.awt.event.KeyListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -59,6 +62,7 @@ import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.util.ShapeUtilities;
 
 import form.Cycle;
 import form.Element;
@@ -109,12 +113,10 @@ public final class Ihm extends JFrame implements Observateur {
 
             @Override
             public void keyTyped(KeyEvent e) {
-                // TODO Auto-generated method stub
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
-                // TODO Auto-generated method stub
 
             }
 
@@ -123,6 +125,7 @@ public final class Ihm extends JFrame implements Observateur {
                 if (e.getKeyCode() == 127 && listCycle.getSelectedIndex() > -1) // touche suppr
                 {
                     for (int idx : listCycle.getSelectedIndices()) {
+                        dataModel.get(idx).delObservateur();
                         dataModel.remove(idx);
                     }
 
@@ -168,7 +171,7 @@ public final class Ihm extends JFrame implements Observateur {
                     XYLineAndShapeRenderer renderer = ((XYLineAndShapeRenderer) plot.getRenderer(0));
                     Paint serieColor = renderer.getSeriesPaint(0);
 
-                    renderer.setSeriesStroke(1, new BasicStroke(3));
+                    renderer.setSeriesStroke(1, new BasicStroke(4));
                     renderer.setSeriesPaint(1, serieColor);
                     renderer.setSeriesShapesVisible(1, false);
 
@@ -179,7 +182,7 @@ public final class Ihm extends JFrame implements Observateur {
         content.add(panelCreation, BorderLayout.EAST);
 
         pack();
-        
+
         panelCreation.setVisible(false);
 
         setLocationRelativeTo(null);
@@ -204,14 +207,17 @@ public final class Ihm extends JFrame implements Observateur {
         toolBar.setFloatable(false);
 
         final JButton btNew = new JButton(new ImageIcon(getClass().getResource(ICON_NEW)));
+        btNew.setToolTipText("Create a new cycle");
         btNew.addActionListener(new NewCycle());
         toolBar.add(btNew);
 
         final JButton btOpen = new JButton(new ImageIcon(getClass().getResource(ICON_OPEN)));
+        btOpen.setToolTipText("Open a existing cycle");
         btOpen.addActionListener(new OpenCycle());
         toolBar.add(btOpen);
 
         final JButton btSave = new JButton(new ImageIcon(getClass().getResource(ICON_SAVE)));
+        btSave.setToolTipText("Save the current cycle");
         btSave.addActionListener(new SaveCycle());
         toolBar.add(btSave);
 
@@ -271,7 +277,7 @@ public final class Ihm extends JFrame implements Observateur {
         group.add(btTrapeze);
 
         final JToggleButton btDesign = new JToggleButton(new ImageIcon(getClass().getResource(ICON_DESIGN)));
-        btDesign.setToolTipText("Mode creation");
+        btDesign.setToolTipText("Design mode");
         btDesign.addActionListener(new ActionListener() {
 
             @Override
@@ -317,19 +323,19 @@ public final class Ihm extends JFrame implements Observateur {
         JMenu menu;
         JMenuItem menuItem;
 
-        menu = new JMenu("Fichier");
+        menu = new JMenu("File");
 
-        menuItem = new JMenuItem("Nouveau");
+        menuItem = new JMenuItem("New");
         menuItem.addActionListener(new NewCycle());
         menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
         menu.add(menuItem);
 
-        menuItem = new JMenuItem("Ouvrir");
+        menuItem = new JMenuItem("Open");
         menuItem.addActionListener(new OpenCycle());
         menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
         menu.add(menuItem);
 
-        menuItem = new JMenuItem("Sauvegarder");
+        menuItem = new JMenuItem("Save");
         menuItem.addActionListener(new SaveCycle());
         menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
         menu.add(menuItem);
@@ -344,18 +350,44 @@ public final class Ihm extends JFrame implements Observateur {
         @Override
         public void actionPerformed(ActionEvent e) {
 
-            final JTextField txtCycleName = new JTextField("Nouveau_cycle", 30);
+            final JTextField txtCycleName = new JTextField("New_cycle", 30);
             final JTextField txtDatasets = new JTextField("LOOP40", 30);
-            txtDatasets.setToolTipText("Saisir les diverses grandeurs a piloter en les separant d'une virgule (Ex : C_REG,LOOP40)");
-            final JComponent[] inputs = new JComponent[] { new JLabel("Nom du cycle"), txtCycleName, new JLabel("Grandeur(s) a piloter"),
-                    txtDatasets };
-            int result = JOptionPane.showConfirmDialog(null, inputs, "Proprietes du cycle", JOptionPane.PLAIN_MESSAGE);
+            txtDatasets.setToolTipText("Enter dataset separate with comma (Ex : C_REG,LOOP40)");
+            final JComponent[] inputs = new JComponent[] { new JLabel("Name of cycle"), txtCycleName, new JLabel("Dataset(s)"), txtDatasets };
+            int result = JOptionPane.showConfirmDialog(null, inputs, "Cycle properties", JOptionPane.PLAIN_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
-                final Cycle cycle = new Cycle(txtCycleName.getText(), txtDatasets.getText());
-                cycle.addObservateur(Ihm.this);
-                dataModel.addElement(cycle);
+                if (txtDatasets.getText().trim().length() > 0) {
+                    final Cycle cycle = new Cycle(txtCycleName.getText(), formatDataset(txtDatasets.getText()));
+                    cycle.addObservateur(Ihm.this);
+                    dataModel.addElement(cycle);
+                } else {
+                    JOptionPane.showMessageDialog(Ihm.this, "You must enter at least one dataset", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+
             }
         }
+    }
+
+    private final List<String> formatDataset(String datasets) {
+        boolean duplicateDataset = false;
+
+        List<String> setDataset = new ArrayList<String>();
+
+        for (String dataset : datasets.split(",")) {
+            if (!setDataset.contains(dataset) && dataset.length() > 0) {
+                setDataset.add(dataset);
+            } else {
+                duplicateDataset = true;
+            }
+        }
+
+        Collections.sort(setDataset);
+
+        if (duplicateDataset) {
+            JOptionPane.showMessageDialog(this, "Duplicate dataset are present", "Info", JOptionPane.INFORMATION_MESSAGE);
+        }
+
+        return setDataset;
     }
 
     private final class OpenCycle implements ActionListener {
@@ -369,7 +401,7 @@ public final class Ihm extends JFrame implements Observateur {
 
                 @Override
                 public String getDescription() {
-                    return "Fichier de cycle (*.txt, *.cycle)";
+                    return "Cycle file (*.txt, *.cycle)";
                 }
 
                 @Override
@@ -412,6 +444,7 @@ public final class Ihm extends JFrame implements Observateur {
             final XYSeries[] series = new XYSeries[nbPlot];
             final XYSeriesCollection[] collections = new XYSeriesCollection[nbPlot];
             final XYItemRenderer[] renderers = new XYLineAndShapeRenderer[nbPlot];
+            Shape diamondShape = ShapeUtilities.createDiamond(1);
             final NumberAxis[] rangeAxiss = new NumberAxis[nbPlot];
             final XYPlot[] subPlots = new XYPlot[nbPlot];
 
@@ -435,6 +468,7 @@ public final class Ihm extends JFrame implements Observateur {
                 collections[nPlot] = new XYSeriesCollection(series[nPlot]);
                 rangeAxiss[nPlot] = new NumberAxis(selectedCycle.getDatasets().get(nPlot).getName());
                 renderers[nPlot] = new XYLineAndShapeRenderer(true, true);
+                renderers[nPlot].setSeriesShape(0, diamondShape);
                 subPlots[nPlot] = new XYPlot(collections[nPlot], null, rangeAxiss[nPlot], renderers[nPlot]);
 
                 plot.add(subPlots[nPlot], 1);
@@ -461,8 +495,8 @@ public final class Ihm extends JFrame implements Observateur {
 
             if (selectedCycle != null) {
                 final JFileChooser jFileChooser = new JFileChooser();
-                jFileChooser.setDialogTitle("Enregistement du fichier");
-                jFileChooser.setFileFilter(new FileNameExtensionFilter("Fichier texte (*.txt)", "txt"));
+                jFileChooser.setDialogTitle("Save file");
+                jFileChooser.setFileFilter(new FileNameExtensionFilter("Text file (*.txt)", "txt"));
                 jFileChooser.setSelectedFile(new File(selectedCycle.getName() + ".txt"));
                 final int rep = jFileChooser.showSaveDialog(Ihm.this);
 
@@ -473,7 +507,7 @@ public final class Ihm extends JFrame implements Observateur {
                         @Override
                         public void run() {
                             if (selectedCycle.save(jFileChooser.getSelectedFile())) {
-                                JOptionPane.showMessageDialog(Ihm.this, "Sauvegarde terminee !", "Message", JOptionPane.INFORMATION_MESSAGE);
+                                JOptionPane.showMessageDialog(Ihm.this, "Saving done !", "Message", JOptionPane.INFORMATION_MESSAGE);
                             }
                         }
                     });

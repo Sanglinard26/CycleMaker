@@ -11,9 +11,9 @@ public abstract class Element implements Serializable {
 
     public static final String BASE = "Base";
     public static final String POINT = "Point";
-    public static final String CRENEAU = "Creneau";
-    public static final String STATIONNAIRE = "Stationnaire";
-    public static final String RAMPE = "Rampe";
+    public static final String CRENEAU = "Jump";
+    public static final String STATIONNAIRE = "Steady";
+    public static final String RAMPE = "Ramp";
     public static final String SINUS = "Sinus";
     public static final String TRAPEZE = "Trapeze";
 
@@ -99,14 +99,14 @@ public abstract class Element implements Serializable {
     public String toString() {
         return this.getClass().getSimpleName();
     }
-    
+
     @Override
     public boolean equals(Object element) {
-    	
-    	double thisElement = this.toString().hashCode() + this.t1 + this.t2;
-    	double otherElement = element.toString().hashCode() + ((Element) element).getT1() + ((Element) element).getT2();
-    	
-    	return Double.compare(thisElement, otherElement) == 0;
+
+        double thisElement = this.toString().hashCode() + this.t1 + this.t2;
+        double otherElement = element.toString().hashCode() + ((Element) element).getT1() + ((Element) element).getT2();
+
+        return Double.compare(thisElement, otherElement) == 0;
     }
 
 }

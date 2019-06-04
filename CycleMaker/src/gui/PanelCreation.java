@@ -130,40 +130,43 @@ public final class PanelCreation extends JPanel {
 
             }
         });
-        
+
         tableElement.addKeyListener(new KeyListener() {
-			
-			@Override
-			public void keyTyped(KeyEvent paramKeyEvent) {}
-			
-			@Override
-			public void keyReleased(KeyEvent paramKeyEvent) {}
-			
-			@Override
-			public void keyPressed(KeyEvent paramKeyEvent) {
-				if (paramKeyEvent.getKeyCode() == 127 && tableElement.getSelectedRowCount() > 0) // touche suppr
-		        {
-					int[] selectedIdx = tableElement.getSelectedRows();
 
-	                if (selectedIdx.length > 0) {
+            @Override
+            public void keyTyped(KeyEvent paramKeyEvent) {
+            }
 
-	                    for (int nElement = selectedIdx.length - 1; nElement > -1; nElement--) {
+            @Override
+            public void keyReleased(KeyEvent paramKeyEvent) {
+            }
 
-	                        Element selectedElement = cycle.getDataset(comBoDataset.getSelectedDataset().getName()).getElements().get(selectedIdx[nElement]);
+            @Override
+            public void keyPressed(KeyEvent paramKeyEvent) {
+                if (paramKeyEvent.getKeyCode() == 127 && tableElement.getSelectedRowCount() > 0) // touche suppr
+                {
+                    int[] selectedIdx = tableElement.getSelectedRows();
 
-	                        for (int i = selectedElement.getLastIndex(); i >= selectedElement.getFirstIndex(); i--) {
-	                            cycle.getDataset(comBoDataset.getSelectedDataset().getName()).getDatas().remove(i);
-	                        }
+                    if (selectedIdx.length > 0) {
 
-	                        cycle.removeElementFromDataset(cycle.getDataset(comBoDataset.getSelectedDataset().getName()), selectedElement);
+                        for (int nElement = selectedIdx.length - 1; nElement > -1; nElement--) {
 
-	                        modelElement.removeElement(selectedIdx[nElement]);
+                            Element selectedElement = cycle.getDataset(comBoDataset.getSelectedDataset().getName()).getElements()
+                                    .get(selectedIdx[nElement]);
 
-	                    }
-	                }
-		        }
-			}
-		});
+                            for (int i = selectedElement.getLastIndex(); i >= selectedElement.getFirstIndex(); i--) {
+                                cycle.getDataset(comBoDataset.getSelectedDataset().getName()).getDatas().remove(i);
+                            }
+
+                            cycle.removeElementFromDataset(cycle.getDataset(comBoDataset.getSelectedDataset().getName()), selectedElement);
+
+                            modelElement.removeElement(selectedIdx[nElement]);
+
+                        }
+                    }
+                }
+            }
+        });
 
         btAdd = new JButton(new AbstractAction("", new ImageIcon(getClass().getResource(ICON_ADD))) {
 
@@ -214,15 +217,16 @@ public final class PanelCreation extends JPanel {
                                         cycle.addElementToDataset(grandeur, newElement);
                                         modelElement.addElement(newElement);
                                     } else {
-                                    	int position = Integer.parseInt(txtPosition.getText());
-                                    	if(position > 1 && position <= modelElement.getRowCount())
-                                    	{
-                                    		cycle.addElementToDataset(grandeur, position, newElement);
+                                        int position = Integer.parseInt(txtPosition.getText());
+                                        if (position > 1 && position <= modelElement.getRowCount()) {
+                                            cycle.addElementToDataset(grandeur, position, newElement);
                                             modelElement.addElement(Integer.parseInt(txtPosition.getText()) - 1, newElement);
-                                    	}else{
-                                    		JOptionPane.showMessageDialog(null, "La position demandee doit être differente de 1 et ne doit pas depassee " + modelElement.getRowCount());
-                                    	}
-                                        
+                                        } else {
+                                            JOptionPane.showMessageDialog(null,
+                                                    "La position demandee doit ï¿½tre differente de 1 et ne doit pas depassee "
+                                                            + modelElement.getRowCount());
+                                        }
+
                                     }
 
                                 }
@@ -261,7 +265,8 @@ public final class PanelCreation extends JPanel {
 
                     for (int nElement = selectedIdx.length - 1; nElement > -1; nElement--) {
 
-                        Element selectedElement = cycle.getDataset(comBoDataset.getSelectedDataset().getName()).getElements().get(selectedIdx[nElement]);
+                        Element selectedElement = cycle.getDataset(comBoDataset.getSelectedDataset().getName()).getElements()
+                                .get(selectedIdx[nElement]);
 
                         for (int i = selectedElement.getLastIndex(); i >= selectedElement.getFirstIndex(); i--) {
                             cycle.getDataset(comBoDataset.getSelectedDataset().getName()).getDatas().remove(i);
@@ -567,7 +572,11 @@ public final class PanelCreation extends JPanel {
 
     private final double getDoubleValue(String txt) {
         if (!txt.isEmpty()) {
-            return Double.parseDouble(txt);
+            try {
+                return Double.parseDouble(txt);
+            } catch (NumberFormatException nbf) {
+                return 0d;
+            }
         }
         return 0d;
     }
@@ -588,105 +597,98 @@ public final class PanelCreation extends JPanel {
     public final int getIndexDataset() {
         return comBoDataset.getIndexDataset();
     }
-    
-    private final class NumericDocument extends DocumentFilter
-    {
-    	private final String removeRegex;
-    	public static final String INTEGER_NUMBER = "Integer";
-    	public static final String DOUBLE_NUMBER = "Double";
-    	
-    	public NumericDocument(String type) {
-			if(INTEGER_NUMBER.equals(type))
-			{
-				removeRegex = "\\D";
-			}else{
-				removeRegex ="[^0-9^\\.]";
-			}
-		}
-    	
-    	@Override
-    	public void insertString(FilterBypass fb, int offset, String text, AttributeSet attr)
-    			throws BadLocationException {
 
-    		text = text.replaceAll(removeRegex, "");
-    		
-    		super.insertString(fb, offset, text, attr);
-    	}
-    	
-    	@Override
-    	public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
-    			throws BadLocationException {
+    private final class NumericDocument extends DocumentFilter {
+        private final String removeRegex;
+        public static final String INTEGER_NUMBER = "Integer";
+        public static final String DOUBLE_NUMBER = "Double";
 
-    		text = text.replaceAll(removeRegex, "");
-    		
-    		super.replace(fb, offset, length, text, attrs);
-    	}
+        public NumericDocument(String type) {
+            if (INTEGER_NUMBER.equals(type)) {
+                removeRegex = "\\D";
+            } else {
+                removeRegex = "[^0-9^\\.^-]";
+            }
+        }
+
+        @Override
+        public void insertString(FilterBypass fb, int offset, String text, AttributeSet attr) throws BadLocationException {
+
+            text = text.replaceAll(removeRegex, "");
+
+            super.insertString(fb, offset, text, attr);
+        }
+
+        @Override
+        public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+
+            text = text.replaceAll(removeRegex, "");
+
+            super.replace(fb, offset, length, text, attrs);
+        }
     }
-    
-    private class ComBoDataset extends JComponent
-    {
 
-		private static final long serialVersionUID = 1L;
-		
-		private final JComboBox<Dataset> combo;
-    	private final JButton btAdd;
-    	
-    	public ComBoDataset(DefaultComboBoxModel<Dataset> model) {
-    		super();
-    		setOpaque(true);
-    		setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
-    		
-			this.combo = new JComboBox<Dataset>(model);
-			this.combo.addActionListener(new ActionListener() {
+    private class ComBoDataset extends JComponent {
 
-	            @Override
-	            public void actionPerformed(ActionEvent e) {
-	                modelElement.clearList();
+        private static final long serialVersionUID = 1L;
 
-	                if (comboBoxModel.getSize() > 0 && !combo.getSelectedItem().toString().isEmpty()) {
-	                    for (Element element : cycle.getDataset(combo.getSelectedItem().toString()).getElements()) {
-	                        modelElement.addElement(element);
+        private final JComboBox<Dataset> combo;
+        private final JButton btAdd;
 
-	                    }
-	                }
+        public ComBoDataset(DefaultComboBoxModel<Dataset> model) {
+            super();
+            setOpaque(true);
+            setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 
-	                for (Component component : PanelCreation.this.getComponents()) {
-	                    if (component instanceof JTextField && component.isEnabled()) {
-	                        ((JTextField) component).setText("");
-	                    }
-	                }
+            this.combo = new JComboBox<Dataset>(model);
+            this.combo.addActionListener(new ActionListener() {
 
-	            }
-	        });
-			
-			this.btAdd = new JButton(new AbstractAction("<html><b>+</b></html>") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    modelElement.clearList();
 
-	            private static final long serialVersionUID = 1L;
+                    if (comboBoxModel.getSize() > 0 && !combo.getSelectedItem().toString().isEmpty()) {
+                        for (Element element : cycle.getDataset(combo.getSelectedItem().toString()).getElements()) {
+                            modelElement.addElement(element);
 
-	            @Override
-	            public void actionPerformed(ActionEvent e) {
-	                String name = JOptionPane.showInputDialog("Nom de la grandeur :");
-	                if (name != null && !name.isEmpty()) {
-	                    cycle.addDataset(name);
-	                    fillDataset();
-	                }
+                        }
+                    }
 
-	            }
-	        });
-			
-			add(this.combo);
-			add(this.btAdd);
-		}
-    	
-    	public final Dataset getSelectedDataset()
-    	{
-    		return (Dataset) this.combo.getSelectedItem();
-    	}
-    	
-    	public final int getIndexDataset()
-    	{
-    		return this.combo.getSelectedIndex();
-    	}
+                    for (Component component : PanelCreation.this.getComponents()) {
+                        if (component instanceof JTextField && component.isEnabled()) {
+                            ((JTextField) component).setText("");
+                        }
+                    }
+
+                }
+            });
+
+            this.btAdd = new JButton(new AbstractAction("<html><b>+</b></html>") {
+
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String name = JOptionPane.showInputDialog("Nom de la grandeur :");
+                    if (name != null && !name.isEmpty()) {
+                        cycle.addDataset(name);
+                        fillDataset();
+                    }
+
+                }
+            });
+
+            add(this.combo);
+            add(this.btAdd);
+        }
+
+        public final Dataset getSelectedDataset() {
+            return (Dataset) this.combo.getSelectedItem();
+        }
+
+        public final int getIndexDataset() {
+            return this.combo.getSelectedIndex();
+        }
     }
 
 }
