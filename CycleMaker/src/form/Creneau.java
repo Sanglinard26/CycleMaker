@@ -37,7 +37,7 @@ public final class Creneau extends Element {
     }
 
     @Override
-    public double DiffEndFromBeginValue() {
+    public double diffEndFromBeginValue() {
         return this.amplitude;
     }
 

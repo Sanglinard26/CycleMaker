@@ -22,7 +22,7 @@ public final class Point extends Element {
     }
 
     @Override
-    public double DiffEndFromBeginValue() {
+    public double diffEndFromBeginValue() {
         return 0;
     }
 

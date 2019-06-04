@@ -34,7 +34,7 @@ public final class Rampe extends Element {
     }
 
     @Override
-    public double DiffEndFromBeginValue() {
+    public double diffEndFromBeginValue() {
         return this.amplitude;
     }
 

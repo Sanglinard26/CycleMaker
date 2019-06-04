@@ -49,7 +49,7 @@ public abstract class Element implements Serializable {
         return amplitude;
     }
 
-    public abstract double DiffEndFromBeginValue();
+    public abstract double diffEndFromBeginValue();
 
     public void setAmplitude(double amplitude) {
         this.amplitude = amplitude;

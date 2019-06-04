@@ -17,6 +17,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,7 +74,6 @@ public final class Ihm extends JFrame implements Observateur {
 
     private static final long serialVersionUID = 1L;
 
-    private final Container content;
     private final JList<Cycle> listCycle;
     private final DefaultListModel<Cycle> dataModel;
     private final ChartPanel chartPanel;
@@ -81,6 +81,8 @@ public final class Ihm extends JFrame implements Observateur {
     private final ButtonGroup group = new ButtonGroup();
 
     private boolean designMode = false;
+    
+    private PropertyChangeSupport pcsBtDesign;
 
     public Ihm() {
         super("Cycle Maker");
@@ -89,19 +91,19 @@ public final class Ihm extends JFrame implements Observateur {
 
         setJMenuBar(createMenu());
 
-        content = getContentPane();
+        final Container content = getContentPane();
 
         content.add(createToolBar(), BorderLayout.NORTH);
 
         dataModel = new DefaultListModel<>();
-        listCycle = new JList<>(dataModel);
+        listCycle = new JList<Cycle>(dataModel);
         listCycle.setFixedCellWidth(200);
         listCycle.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         listCycle.addListSelectionListener(new ListSelectionListener() {
 
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting() == false && !listCycle.isSelectionEmpty()) {
+                if (!e.getValueIsAdjusting() && !listCycle.isSelectionEmpty()) {
                     panelCreation.setCycle(listCycle.getSelectedValue());
                     panelCreation.fillDataset();
                     createCombinedChart();
@@ -131,7 +133,23 @@ public final class Ihm extends JFrame implements Observateur {
 
                     listCycle.clearSelection();
 
+                    chartPanel.setChart(null);
                     panelCreation.setCycle(null);
+                    
+                    
+                    
+                    pcsBtDesign.firePropertyChange(JToggleButton.MODEL_CHANGED_PROPERTY, designMode, false);
+                    
+                    designMode = false;
+                    
+                    Enumeration<AbstractButton> enumBt = group.getElements();
+                    while (enumBt.hasMoreElements()) {
+						AbstractButton ab = enumBt.nextElement();
+						ab.setSelected(designMode);
+						ab.setEnabled(designMode);
+					}
+                    
+                    panelCreation.setVisible(designMode);
                 }
             }
         });
@@ -296,9 +314,19 @@ public final class Ihm extends JFrame implements Observateur {
                 } else {
                     btDesign.setSelected(false);
                 }
-
             }
         });
+        
+        pcsBtDesign = new PropertyChangeSupport(btDesign);
+        pcsBtDesign.addPropertyChangeListener(new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent event) {
+				btDesign.setSelected((boolean) event.getNewValue());
+			}
+		});
+        
+        
         toolBar.add(btDesign);
         toolBar.addSeparator();
         toolBar.add(btPoint);

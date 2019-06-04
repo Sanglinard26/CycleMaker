@@ -46,7 +46,7 @@ public final class Trapeze extends Element {
     }
 
     @Override
-    public double DiffEndFromBeginValue() {
+    public double diffEndFromBeginValue() {
         return 0;
     }
 

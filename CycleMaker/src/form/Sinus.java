@@ -9,12 +9,9 @@ public final class Sinus extends Element {
 
     private static final long serialVersionUID = 1L;
 
-    private double frequence;
-
     public Sinus(Dataset dataset, double amplitude, double frequence) {
 
         this.amplitude = amplitude;
-        this.frequence = frequence;
         this.duration = (1 / frequence) + te;
 
         final int nPoint = (int) ((1 / frequence) / te);
@@ -27,7 +24,7 @@ public final class Sinus extends Element {
             double valSin = 0;
 
             for (int i = 0; i <= nPoint; i++) {
-                valSin = valDepart + Math.sin(2 * Math.PI * this.frequence * (i * te)) * (this.amplitude / 2);
+                valSin = valDepart + Math.sin(2 * Math.PI * frequence * (i * te)) * (this.amplitude / 2);
                 dataset.addData(valSin);
                 this.nbPoint++;
             }
@@ -38,7 +35,7 @@ public final class Sinus extends Element {
     }
 
     @Override
-    public double DiffEndFromBeginValue() {
+    public double diffEndFromBeginValue() {
         return 0;
     }
 

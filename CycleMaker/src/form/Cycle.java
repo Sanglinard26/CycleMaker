@@ -94,7 +94,7 @@ public final class Cycle implements Observable, Serializable {
                     datasets = new ArrayList<Dataset>(splitLine.length - 1);
 
                     for (String nameDataset : splitLine) {
-                        if (!nameDataset.equals("Temps")) {
+                        if (!"Temps".equals(nameDataset)) {
                             this.datasets.add(new Dataset(nameDataset));
                         }
                     }
@@ -280,7 +280,7 @@ public final class Cycle implements Observable, Serializable {
 
         final int idx1 = form.getFirstIndex();
         final int idx2 = form.getLastIndex();
-        final double removeAmplitude = form.DiffEndFromBeginValue();
+        final double removeAmplitude = form.diffEndFromBeginValue();
         final int removeNbPoint = form.getNbPoint();
 
         dataset.removeElement(form);

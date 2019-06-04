@@ -48,13 +48,13 @@ public final class PanelCreation extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
-    final String ICON_ADD = "/icon_add_24.png";
-    final String ICON_DEL = "/icon_del_24.png";
+    private static final String ICON_ADD = "/icon_add_24.png";
+    private static final String ICON_DEL = "/icon_del_24.png";
 
     private static final GridBagConstraints gbc = new GridBagConstraints();
 
-    private final JLabel labelType, iconElement;
-    private final JButton btDel, btAdd;
+    private final JLabel labelType;
+    private final JLabel iconElement;
     private final ElementModel modelElement;
     private final TableElement tableElement;
     private final ComBoDataset comBoDataset;
@@ -168,7 +168,7 @@ public final class PanelCreation extends JPanel {
             }
         });
 
-        btAdd = new JButton(new AbstractAction("", new ImageIcon(getClass().getResource(ICON_ADD))) {
+        final JButton btAdd = new JButton(new AbstractAction("", new ImageIcon(getClass().getResource(ICON_ADD))) {
 
             private static final long serialVersionUID = 1L;
 
@@ -209,6 +209,8 @@ public final class PanelCreation extends JPanel {
                                     newElement = new Trapeze(grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtTpsRampe.getText()),
                                             getDoubleValue(txtAmplitude.getText()));
                                     break;
+                                default:
+                                	break;
                                 }
 
                                 if (newElement != null) {
@@ -253,7 +255,7 @@ public final class PanelCreation extends JPanel {
         gbc.anchor = GridBagConstraints.CENTER;
         add(btAdd, gbc);
 
-        btDel = new JButton(new AbstractAction("", new ImageIcon(getClass().getResource(ICON_DEL))) {
+        final JButton btDel = new JButton(new AbstractAction("", new ImageIcon(getClass().getResource(ICON_DEL))) {
 
             private static final long serialVersionUID = 1L;
 
@@ -566,6 +568,8 @@ public final class PanelCreation extends JPanel {
             txtNbRepetition.setEnabled(true);
             iconElement.setIcon(new ImageIcon(getClass().getResource(Element.ICON_TRAPEZE)));
             break;
+        default:
+        	break;
         }
 
     }
