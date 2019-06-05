@@ -114,7 +114,7 @@ public final class Ihm extends JFrame implements Observateur {
                     panelCreation.setCycle(listCycle.getSelectedValue());
                     panelCreation.fillDataset();
                     createCombinedChart();
-                    boundedRangeModel.setRangeProperties(0, 1, 0, listCycle.getSelectedValue().getTime().size() - 1, true);
+                    boundedRangeModel.setRangeProperties(0, 0, 0, listCycle.getSelectedValue().getNbPoint()-1, true);
                 }
             }
         });
@@ -173,7 +173,15 @@ public final class Ihm extends JFrame implements Observateur {
 
             @Override
             public void stateChanged(ChangeEvent e) {
-                System.out.println("Value = " + boundedRangeModel.getValue());
+            	CombinedDomainXYPlot plot =  (CombinedDomainXYPlot) chartPanel.getChart().getPlot();
+                
+                @SuppressWarnings("unchecked")
+				List<XYPlot> subPlots = plot.getSubplots();
+                
+                for(XYPlot subplot : subPlots)
+                {
+                	subplot.setDomainCrosshairValue(listCycle.getSelectedValue().getTime().get(boundedRangeModel.getValue()));
+                }
 
             }
         });
@@ -521,7 +529,6 @@ public final class Ihm extends JFrame implements Observateur {
             plot.setDomainPannable(true);
             plot.setOrientation(PlotOrientation.VERTICAL);
             plot.setGap(20);
-            plot.setDomainCrosshairVisible(true);
 
             JFreeChart chart = new JFreeChart(plot);
 
@@ -587,7 +594,9 @@ public final class Ihm extends JFrame implements Observateur {
     @Override
     public void update(String property) {
         createCombinedChart();
-
+        int nbPoint = listCycle.getSelectedValue().getNbPoint();
+        int sliderValue = boundedRangeModel.getValue();
+        boundedRangeModel.setRangeProperties(sliderValue, 0, 0, nbPoint-1, true);
     }
 
 }

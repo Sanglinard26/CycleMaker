@@ -185,6 +185,12 @@ public final class Cycle implements Observable, Serializable {
     public String getName() {
         return name;
     }
+    
+    public final int getNbPoint()
+    {
+    	this.baseTime.update();
+    	return this.baseTime.size();
+    }
 
     public final void addDataset(String name) {
         if (!this.datasets.contains(new Dataset(name))) {
