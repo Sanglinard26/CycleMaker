@@ -26,7 +26,9 @@ import java.util.List;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
+import javax.swing.BoundedRangeModel;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -41,6 +43,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
@@ -48,6 +51,8 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
@@ -77,11 +82,13 @@ public final class Ihm extends JFrame implements Observateur {
     private final JList<Cycle> listCycle;
     private final DefaultListModel<Cycle> dataModel;
     private final ChartPanel chartPanel;
+    private final JSlider sliderTime;
+    private final BoundedRangeModel boundedRangeModel;
     private final PanelCreation panelCreation;
     private final ButtonGroup group = new ButtonGroup();
 
     private boolean designMode = false;
-    
+
     private PropertyChangeSupport pcsBtDesign;
 
     public Ihm() {
@@ -107,6 +114,7 @@ public final class Ihm extends JFrame implements Observateur {
                     panelCreation.setCycle(listCycle.getSelectedValue());
                     panelCreation.fillDataset();
                     createCombinedChart();
+                    boundedRangeModel.setRangeProperties(0, 1, 0, listCycle.getSelectedValue().getTime().size() - 1, true);
                 }
             }
         });
@@ -135,20 +143,18 @@ public final class Ihm extends JFrame implements Observateur {
 
                     chartPanel.setChart(null);
                     panelCreation.setCycle(null);
-                    
-                    
-                    
+
                     pcsBtDesign.firePropertyChange(JToggleButton.MODEL_CHANGED_PROPERTY, designMode, false);
-                    
+
                     designMode = false;
-                    
+
                     Enumeration<AbstractButton> enumBt = group.getElements();
                     while (enumBt.hasMoreElements()) {
-						AbstractButton ab = enumBt.nextElement();
-						ab.setSelected(designMode);
-						ab.setEnabled(designMode);
-					}
-                    
+                        AbstractButton ab = enumBt.nextElement();
+                        ab.setSelected(designMode);
+                        ab.setEnabled(designMode);
+                    }
+
                     panelCreation.setVisible(designMode);
                 }
             }
@@ -159,8 +165,19 @@ public final class Ihm extends JFrame implements Observateur {
 
         chartPanel = new ChartPanel(null);
         chartPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-
         content.add(chartPanel, BorderLayout.CENTER);
+
+        boundedRangeModel = new DefaultBoundedRangeModel();
+        sliderTime = new JSlider(boundedRangeModel);
+        boundedRangeModel.addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                System.out.println("Value = " + boundedRangeModel.getValue());
+
+            }
+        });
+        content.add(sliderTime, BorderLayout.SOUTH);
 
         panelCreation = new PanelCreation();
         panelCreation.addPropertyChangeListener(new PropertyChangeListener() {
@@ -316,17 +333,16 @@ public final class Ihm extends JFrame implements Observateur {
                 }
             }
         });
-        
+
         pcsBtDesign = new PropertyChangeSupport(btDesign);
         pcsBtDesign.addPropertyChangeListener(new PropertyChangeListener() {
-			
-			@Override
-			public void propertyChange(PropertyChangeEvent event) {
-				btDesign.setSelected((boolean) event.getNewValue());
-			}
-		});
-        
-        
+
+            @Override
+            public void propertyChange(PropertyChangeEvent event) {
+                btDesign.setSelected((boolean) event.getNewValue());
+            }
+        });
+
         toolBar.add(btDesign);
         toolBar.addSeparator();
         toolBar.add(btPoint);
@@ -498,7 +514,7 @@ public final class Ihm extends JFrame implements Observateur {
                 renderers[nPlot] = new XYLineAndShapeRenderer(true, true);
                 renderers[nPlot].setSeriesShape(0, diamondShape);
                 subPlots[nPlot] = new XYPlot(collections[nPlot], null, rangeAxiss[nPlot], renderers[nPlot]);
-
+                subPlots[nPlot].setDomainCrosshairVisible(true);
                 plot.add(subPlots[nPlot], 1);
             }
 
