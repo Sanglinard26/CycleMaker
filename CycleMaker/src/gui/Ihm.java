@@ -60,6 +60,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.PlotOrientation;
@@ -68,6 +69,7 @@ import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.TextAnchor;
 import org.jfree.util.ShapeUtilities;
 
 import form.Cycle;
@@ -114,7 +116,7 @@ public final class Ihm extends JFrame implements Observateur {
                     panelCreation.setCycle(listCycle.getSelectedValue());
                     panelCreation.fillDataset();
                     createCombinedChart();
-                    boundedRangeModel.setRangeProperties(0, 0, 0, listCycle.getSelectedValue().getNbPoint()-1, true);
+                    boundedRangeModel.setRangeProperties(0, 0, 0, listCycle.getSelectedValue().getNbPoint() - 1, true);
                 }
             }
         });
@@ -169,18 +171,39 @@ public final class Ihm extends JFrame implements Observateur {
 
         boundedRangeModel = new DefaultBoundedRangeModel();
         sliderTime = new JSlider(boundedRangeModel);
+        sliderTime.setPaintTicks(true);
         boundedRangeModel.addChangeListener(new ChangeListener() {
 
             @Override
             public void stateChanged(ChangeEvent e) {
-            	CombinedDomainXYPlot plot =  (CombinedDomainXYPlot) chartPanel.getChart().getPlot();
-                
-                @SuppressWarnings("unchecked")
-				List<XYPlot> subPlots = plot.getSubplots();
-                
-                for(XYPlot subplot : subPlots)
-                {
-                	subplot.setDomainCrosshairValue(listCycle.getSelectedValue().getTime().get(boundedRangeModel.getValue()));
+
+                if (!boundedRangeModel.getValueIsAdjusting()) {
+                    CombinedDomainXYPlot plot = (CombinedDomainXYPlot) chartPanel.getChart().getPlot();
+
+                    @SuppressWarnings("unchecked")
+                    List<XYPlot> subPlots = plot.getSubplots();
+
+                    for (XYPlot subplot : subPlots) {
+
+                        int sliderValue = boundedRangeModel.getValue();
+
+                        subplot.setDomainCrosshairValue(listCycle.getSelectedValue().getTime().get(sliderValue));
+                        XYTextAnnotation txtAnnot = (XYTextAnnotation) subplot.getAnnotations().get(0);
+                        txtAnnot.setX(listCycle.getSelectedValue().getTime().get(sliderValue));
+
+                        double yVal = Double.NaN;
+                        if (sliderValue < subplot.getDataset().getItemCount(0)) {
+                            yVal = subplot.getDataset().getYValue(0, sliderValue);
+                        }
+
+                        String txtVal = String.format("%.2f", yVal);
+                        txtAnnot.setText(txtVal);
+
+                        txtAnnot.setY(yVal);
+                        txtAnnot.setTextAnchor(TextAnchor.BOTTOM_RIGHT);
+                        txtAnnot.setOutlineVisible(true);
+                        txtAnnot.setBackgroundPaint(Color.WHITE);
+                    }
                 }
 
             }
@@ -523,6 +546,9 @@ public final class Ihm extends JFrame implements Observateur {
                 renderers[nPlot].setSeriesShape(0, diamondShape);
                 subPlots[nPlot] = new XYPlot(collections[nPlot], null, rangeAxiss[nPlot], renderers[nPlot]);
                 subPlots[nPlot].setDomainCrosshairVisible(true);
+                subPlots[nPlot].setDomainCrosshairStroke(new BasicStroke(1f));
+                subPlots[nPlot].setDomainCrosshairPaint(Color.BLACK);
+                subPlots[nPlot].addAnnotation(new XYTextAnnotation("", Double.NaN, Double.NaN));
                 plot.add(subPlots[nPlot], 1);
             }
 
@@ -534,6 +560,7 @@ public final class Ihm extends JFrame implements Observateur {
 
             chartPanel.setChart(chart);
             chartPanel.setRangeZoomable(false);
+
         }
     }
 
@@ -596,7 +623,7 @@ public final class Ihm extends JFrame implements Observateur {
         createCombinedChart();
         int nbPoint = listCycle.getSelectedValue().getNbPoint();
         int sliderValue = boundedRangeModel.getValue();
-        boundedRangeModel.setRangeProperties(sliderValue, 0, 0, nbPoint-1, true);
+        boundedRangeModel.setRangeProperties(sliderValue, 0, 0, nbPoint - 1, true);
     }
 
 }

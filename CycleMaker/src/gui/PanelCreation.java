@@ -68,7 +68,7 @@ public final class PanelCreation extends JPanel {
     public PanelCreation() {
 
         setLayout(new GridBagLayout());
-        setBorder(BorderFactory.createTitledBorder("Creation"));
+        setBorder(BorderFactory.createTitledBorder("Design"));
 
         labelType = new JLabel("Type : ");
         gbc.fill = GridBagConstraints.BOTH;
@@ -91,7 +91,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.CENTER;
-        add(new JLabel("Grandeur(s)"), gbc);
+        add(new JLabel("Dataset(s)"), gbc);
 
         comboBoxModel = new DefaultComboBoxModel<>();
         comBoDataset = new ComBoDataset(comboBoxModel);
@@ -210,7 +210,7 @@ public final class PanelCreation extends JPanel {
                                             getDoubleValue(txtAmplitude.getText()));
                                     break;
                                 default:
-                                	break;
+                                    break;
                                 }
 
                                 if (newElement != null) {
@@ -225,8 +225,7 @@ public final class PanelCreation extends JPanel {
                                             modelElement.addElement(Integer.parseInt(txtPosition.getText()) - 1, newElement);
                                         } else {
                                             JOptionPane.showMessageDialog(null,
-                                                    "La position demandee doit �tre differente de 1 et ne doit pas depassee "
-                                                            + modelElement.getRowCount());
+                                                    "The position should be greater than zero and lower than " + modelElement.getRowCount());
                                         }
 
                                     }
@@ -303,7 +302,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(20, 10, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
-        add(new JLabel("<html><u>Parametres : </u></html>"), gbc);
+        add(new JLabel("<html><u>Parameters : </u></html>"), gbc);
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 0;
@@ -314,7 +313,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
-        add(new JLabel("Valeur du point : "), gbc);
+        add(new JLabel("Value of point : "), gbc);
 
         txtValue = new JTextField(10);
         ((PlainDocument) txtValue.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.DOUBLE_NUMBER));
@@ -339,7 +338,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
-        add(new JLabel("Duree : "), gbc);
+        add(new JLabel("Duration : "), gbc);
 
         txtDuration = new JTextField(10);
         ((PlainDocument) txtDuration.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.DOUBLE_NUMBER));
@@ -389,7 +388,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
-        add(new JLabel("Duree de la rampe : "), gbc);
+        add(new JLabel("Duration of the ramp : "), gbc);
 
         txtTpsRampe = new JTextField(10);
         ((PlainDocument) txtTpsRampe.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.DOUBLE_NUMBER));
@@ -414,7 +413,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
-        add(new JLabel("Frequence : "), gbc);
+        add(new JLabel("Frequency : "), gbc);
 
         txtFrequence = new JTextField(10);
         ((PlainDocument) txtFrequence.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.DOUBLE_NUMBER));
@@ -439,7 +438,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        add(new JLabel("Nombre de repetition : "), gbc);
+        add(new JLabel("Number of repetition : "), gbc);
 
         txtNbRepetition = new JTextField(10);
         ((PlainDocument) txtNbRepetition.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.INTEGER_NUMBER));
@@ -569,7 +568,7 @@ public final class PanelCreation extends JPanel {
             iconElement.setIcon(new ImageIcon(getClass().getResource(Element.ICON_TRAPEZE)));
             break;
         default:
-        	break;
+            break;
         }
 
     }
@@ -673,7 +672,7 @@ public final class PanelCreation extends JPanel {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    String name = JOptionPane.showInputDialog("Nom de la grandeur :");
+                    String name = JOptionPane.showInputDialog("Name of dataset :");
                     if (name != null && !name.isEmpty()) {
                         cycle.addDataset(name);
                         fillDataset();
