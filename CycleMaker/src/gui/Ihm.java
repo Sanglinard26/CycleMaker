@@ -7,14 +7,20 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Paint;
+import java.awt.Point;
 import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -58,10 +64,16 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.jfree.chart.ChartMouseEvent;
+import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.entity.ChartEntity;
+import org.jfree.chart.entity.EntityCollection;
+import org.jfree.chart.entity.PlotEntity;
+import org.jfree.chart.entity.XYItemEntity;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
@@ -88,6 +100,11 @@ public final class Ihm extends JFrame implements Observateur {
     private final BoundedRangeModel boundedRangeModel;
     private final PanelCreation panelCreation;
     private final ButtonGroup group = new ButtonGroup();
+
+    private JFreeChart chart;
+    private XYItemEntity xyItemEntity = null;
+    private double initialMovePointY;
+    private double finalMovePointY;
 
     private boolean designMode = false;
 
@@ -519,7 +536,7 @@ public final class Ihm extends JFrame implements Observateur {
             final XYSeries[] series = new XYSeries[nbPlot];
             final XYSeriesCollection[] collections = new XYSeriesCollection[nbPlot];
             final XYItemRenderer[] renderers = new XYLineAndShapeRenderer[nbPlot];
-            Shape diamondShape = ShapeUtilities.createDiamond(1);
+            Shape diamondShape = ShapeUtilities.createDiamond(2);
             final NumberAxis[] rangeAxiss = new NumberAxis[nbPlot];
             final XYPlot[] subPlots = new XYPlot[nbPlot];
 
@@ -556,10 +573,109 @@ public final class Ihm extends JFrame implements Observateur {
             plot.setOrientation(PlotOrientation.VERTICAL);
             plot.setGap(20);
 
-            JFreeChart chart = new JFreeChart(plot);
+            chart = new JFreeChart(plot);
 
             chartPanel.setChart(chart);
             chartPanel.setRangeZoomable(false);
+
+            chartPanel.addChartMouseListener(new ChartMouseListener() {
+
+                @Override
+                public void chartMouseMoved(ChartMouseEvent paramChartMouseEvent) {
+
+                    JFreeChart chart = paramChartMouseEvent.getChart();
+                    XYPlot plot = (XYPlot) ((CombinedDomainXYPlot) chart.getPlot()).getSubplots().get(0);
+
+                    ChartEntity chartEntity = paramChartMouseEvent.getEntity();
+
+                    if (plot.getDatasetCount() > 0 && chartEntity instanceof PlotEntity) {
+
+                        int x = paramChartMouseEvent.getTrigger().getX(); // initialized point whenenver mouse is pressed
+                        int y = paramChartMouseEvent.getTrigger().getY();
+                        EntityCollection entities = chartPanel.getChartRenderingInfo().getEntityCollection();
+                        ChartMouseEvent cme = new ChartMouseEvent(chart, paramChartMouseEvent.getTrigger(), entities.getEntity(x, y));
+                        ChartEntity entity = cme.getEntity();
+                        if ((entity != null) && (entity instanceof XYItemEntity)) {
+                            xyItemEntity = (XYItemEntity) entity;
+                        } else if (!(entity instanceof XYItemEntity)) {
+                            xyItemEntity = null;
+                            chartPanel.setDomainZoomable(true);
+                            chartPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                            return;
+                        }
+                        if (xyItemEntity == null) {
+                            chartPanel.setDomainZoomable(true);
+                            chartPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                            return; // return if not pressed on any series point
+                        }
+
+                        Point pt = paramChartMouseEvent.getTrigger().getPoint();
+                        Rectangle2D dataAreaInfo = chartPanel.getChartRenderingInfo().getPlotInfo().getDataArea();
+                        Point2D p = chartPanel.translateScreenToJava2D(pt);
+                        initialMovePointY = xyItemEntity.getDataset().getY(0, xyItemEntity.getItem()).doubleValue();
+
+                        boolean canMove = true;
+                        chartPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+                    }
+
+                }
+
+                @Override
+                public void chartMouseClicked(ChartMouseEvent arg0) {
+                    if (chartPanel.getCursor().getType() == 12) {
+                        System.out.println("Y from dataset = " + xyItemEntity.getDataset().getY(0, xyItemEntity.getItem()));
+                    }
+
+                }
+            });
+
+            chartPanel.addMouseMotionListener(new MouseMotionListener() {
+
+                @Override
+                public void mouseMoved(MouseEvent e) {
+                    // TODO Auto-generated method stub
+
+                }
+
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    if (chartPanel.getCursor().getType() == 12) {
+
+                        chartPanel.setDomainZoomable(false);
+
+                        System.out.println("Mouve Y point");
+                        int itemIndex = xyItemEntity.getItem();
+
+                        System.out.println("Item index = " + itemIndex);
+
+                        Point pt = e.getPoint();
+                        XYPlot xy = (XYPlot) ((CombinedDomainXYPlot) chart.getPlot()).getSubplots().get(0);
+                        XYSeries series = ((XYSeriesCollection) xy.getDataset()).getSeries(0);
+                        Rectangle2D dataArea = chartPanel.getChartRenderingInfo().getPlotInfo().getDataArea();
+                        Point2D p = chartPanel.translateScreenToJava2D(pt);
+                        finalMovePointY = xy.getRangeAxis().java2DToValue(p.getY(), dataArea, xy.getRangeAxisEdge());
+
+                        System.out.println(finalMovePointY);
+
+                        double difference = finalMovePointY - initialMovePointY;
+
+                        // retrict movement for upper and lower limit (upper limit
+                        // should be as per application needs)
+                        double targetPoint = series.getY(itemIndex).doubleValue() + difference;
+
+                        System.out.println("Target = " + targetPoint);
+
+                        // series.update(Integer.valueOf(itemIndex), Double.valueOf(targetPoint));
+                        series.updateByIndex(itemIndex, Double.valueOf(targetPoint));
+                        chart.fireChartChanged();
+                        chartPanel.updateUI();
+                        initialMovePointY = finalMovePointY;
+
+                    }
+
+                }
+            });
 
         }
     }
