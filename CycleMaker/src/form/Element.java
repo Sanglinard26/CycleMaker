@@ -13,7 +13,7 @@ public abstract class Element implements Serializable {
     public static final String POINT = "Point";
     public static final String CRENEAU = "Jump";
     public static final String STATIONNAIRE = "Steady";
-    public static final String RAMPE = "Ramp";
+    public static final String RAMPE = "Slope";
     public static final String SINUS = "Sinus";
     public static final String TRAPEZE = "Trapeze";
 

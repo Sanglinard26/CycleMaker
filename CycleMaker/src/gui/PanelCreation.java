@@ -6,7 +6,6 @@ package gui;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -214,6 +213,12 @@ public final class PanelCreation extends JPanel {
                                 }
 
                                 if (newElement != null) {
+                                	
+                                	if(modelElement.getRowCount() == 0 && !Element.POINT.equals(selectedForm))
+                                	{
+                                		JOptionPane.showMessageDialog(PanelCreation.this.getParent(), "The first element must be a <Point>", "Info", JOptionPane.INFORMATION_MESSAGE);
+                                		return;
+                                	}
 
                                     if (txtPosition.getText().isEmpty()) {
                                         cycle.addElementToDataset(grandeur, newElement);
@@ -252,6 +257,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.CENTER;
+        btAdd.setToolTipText("Add an element");
         add(btAdd, gbc);
 
         final JButton btDel = new JButton(new AbstractAction("", new ImageIcon(getClass().getResource(ICON_DEL))) {
@@ -291,6 +297,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.anchor = GridBagConstraints.CENTER;
+        btDel.setToolTipText("Remove an element");
         add(btDel, gbc);
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -388,7 +395,7 @@ public final class PanelCreation extends JPanel {
         gbc.weighty = 0;
         gbc.insets = new Insets(0, 10, 0, 0);
         gbc.anchor = GridBagConstraints.WEST;
-        add(new JLabel("Duration of the ramp : "), gbc);
+        add(new JLabel("Ramp duration : "), gbc);
 
         txtTpsRampe = new JTextField(10);
         ((PlainDocument) txtTpsRampe.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.DOUBLE_NUMBER));
@@ -466,6 +473,7 @@ public final class PanelCreation extends JPanel {
         add(new JLabel("Position : "), gbc);
 
         txtPosition = new JTextField(5);
+        txtPosition.setToolTipText("<html>Not mandatory. <p>If this parameter is empty the element will be add at the end.");
         ((PlainDocument) txtPosition.getDocument()).setDocumentFilter(new NumericDocument(NumericDocument.INTEGER_NUMBER));
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridx = 1;
@@ -501,7 +509,7 @@ public final class PanelCreation extends JPanel {
         this.cycle = cycle;
         this.selectedForm = forme;
 
-        labelType.setText("Type : " + forme);
+        labelType.setText("<html>Type : " + "<b>" + forme);
 
         txtValue.setText("");
         txtDuration.setText("");
@@ -595,6 +603,7 @@ public final class PanelCreation extends JPanel {
                 comboBoxModel.addElement(dataset);
             }
         }
+        comBoDataset.combo.setSelectedIndex(comBoDataset.combo.getItemCount()-1);
     }
 
     public final int getIndexDataset() {
@@ -637,11 +646,14 @@ public final class PanelCreation extends JPanel {
 
         private final JComboBox<Dataset> combo;
         private final JButton btAdd;
+        private final JButton btDel;
 
         public ComBoDataset(DefaultComboBoxModel<Dataset> model) {
             super();
             setOpaque(true);
-            setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            setLayout(new GridBagLayout());
+            
+            GridBagConstraints gbc = new GridBagConstraints();
 
             this.combo = new JComboBox<Dataset>(model);
             this.combo.addActionListener(new ActionListener() {
@@ -680,9 +692,42 @@ public final class PanelCreation extends JPanel {
 
                 }
             });
+            
+            this.btDel = new JButton(new AbstractAction("<html><b>-</b></html>") {
 
-            add(this.combo);
-            add(this.btAdd);
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (comboBoxModel.getSize() > 1) {
+                    	cycle.removeDataset(getSelectedDataset());
+                    	fillDataset();
+                    }else{
+                    	JOptionPane.showMessageDialog(PanelCreation.this.getParent(), "At least one dataset is required, add one dataset before deleting this one.", "Info", JOptionPane.INFORMATION_MESSAGE);
+                    }
+
+                }
+            });
+
+            
+            
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.gridwidth =1;
+            btAdd.setToolTipText("Add a dataset");
+            add(this.btAdd, gbc);
+            
+            gbc.gridx = 1;
+            gbc.gridy = 0;
+            gbc.gridwidth =1;
+            btDel.setToolTipText("Remove this dataset");
+            add(this.btDel, gbc);
+            
+            gbc.gridx = 0;
+            gbc.gridy = 1;
+            gbc.gridwidth = 2;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            add(this.combo, gbc);
         }
 
         public final Dataset getSelectedDataset() {

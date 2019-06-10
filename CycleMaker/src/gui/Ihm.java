@@ -7,19 +7,13 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Paint;
-import java.awt.Point;
-import java.awt.Shape;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -30,11 +24,10 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.BoundedRangeModel;
 import javax.swing.ButtonGroup;
-import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -49,7 +42,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
-import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
@@ -57,54 +49,35 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.jfree.chart.ChartMouseEvent;
-import org.jfree.chart.ChartMouseListener;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.annotations.XYTextAnnotation;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.entity.ChartEntity;
-import org.jfree.chart.entity.EntityCollection;
-import org.jfree.chart.entity.PlotEntity;
-import org.jfree.chart.entity.XYItemEntity;
+import org.jfree.chart.annotations.XYAnnotation;
+import org.jfree.chart.annotations.XYShapeAnnotation;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
-import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.ui.TextAnchor;
-import org.jfree.util.ShapeUtilities;
+import org.jfree.data.Range;
 
 import form.Cycle;
 import form.Element;
-import observer.Observateur;
 import utils.Utilitaire;
 
-public final class Ihm extends JFrame implements Observateur {
+public final class Ihm extends JFrame {
 
     private static final long serialVersionUID = 1L;
+    
+    private static final String APP_ICON = "/app_icon_32.png";
+    private static final String CONTACT_ICON = "/contact_icon_16.png";
+    private static final String NEWS_ICON = "/new_icon_16.png";
 
     private final JList<Cycle> listCycle;
     private final DefaultListModel<Cycle> dataModel;
-    private final ChartPanel chartPanel;
-    private final JSlider sliderTime;
-    private final BoundedRangeModel boundedRangeModel;
+    private final ChartView chartView;
     private final PanelCreation panelCreation;
     private final ButtonGroup group = new ButtonGroup();
-
-    private JFreeChart chart;
-    private XYItemEntity xyItemEntity = null;
-    private double initialMovePointY;
-    private double finalMovePointY;
 
     private boolean designMode = false;
 
@@ -114,6 +87,7 @@ public final class Ihm extends JFrame implements Observateur {
         super("Cycle Maker");
         setLayout(new BorderLayout());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource(APP_ICON)));
 
         setJMenuBar(createMenu());
 
@@ -132,12 +106,10 @@ public final class Ihm extends JFrame implements Observateur {
                 if (!e.getValueIsAdjusting() && !listCycle.isSelectionEmpty()) {
                     panelCreation.setCycle(listCycle.getSelectedValue());
                     panelCreation.fillDataset();
-                    createCombinedChart();
-                    boundedRangeModel.setRangeProperties(0, 0, 0, listCycle.getSelectedValue().getNbPoint() - 1, true);
+                    chartView.createCombinedChart(listCycle.getSelectedValue());
                 }
             }
         });
-
         listCycle.addKeyListener(new KeyListener() {
 
             @Override
@@ -160,8 +132,8 @@ public final class Ihm extends JFrame implements Observateur {
 
                     listCycle.clearSelection();
 
-                    chartPanel.setChart(null);
                     panelCreation.setCycle(null);
+                    chartView.getChartPanel().setChart(null);
 
                     pcsBtDesign.firePropertyChange(JToggleButton.MODEL_CHANGED_PROPERTY, designMode, false);
 
@@ -182,50 +154,9 @@ public final class Ihm extends JFrame implements Observateur {
         content.add(new JScrollPane(listCycle, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED),
                 BorderLayout.WEST);
 
-        chartPanel = new ChartPanel(null);
-        chartPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        content.add(chartPanel, BorderLayout.CENTER);
-
-        boundedRangeModel = new DefaultBoundedRangeModel();
-        sliderTime = new JSlider(boundedRangeModel);
-        sliderTime.setPaintTicks(true);
-        boundedRangeModel.addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(ChangeEvent e) {
-
-                if (!boundedRangeModel.getValueIsAdjusting()) {
-                    CombinedDomainXYPlot plot = (CombinedDomainXYPlot) chartPanel.getChart().getPlot();
-
-                    @SuppressWarnings("unchecked")
-                    List<XYPlot> subPlots = plot.getSubplots();
-
-                    for (XYPlot subplot : subPlots) {
-
-                        int sliderValue = boundedRangeModel.getValue();
-
-                        subplot.setDomainCrosshairValue(listCycle.getSelectedValue().getTime().get(sliderValue));
-                        XYTextAnnotation txtAnnot = (XYTextAnnotation) subplot.getAnnotations().get(0);
-                        txtAnnot.setX(listCycle.getSelectedValue().getTime().get(sliderValue));
-
-                        double yVal = Double.NaN;
-                        if (sliderValue < subplot.getDataset().getItemCount(0)) {
-                            yVal = subplot.getDataset().getYValue(0, sliderValue);
-                        }
-
-                        String txtVal = String.format("%.2f", yVal);
-                        txtAnnot.setText(txtVal);
-
-                        txtAnnot.setY(yVal);
-                        txtAnnot.setTextAnchor(TextAnchor.BOTTOM_RIGHT);
-                        txtAnnot.setOutlineVisible(true);
-                        txtAnnot.setBackgroundPaint(Color.WHITE);
-                    }
-                }
-
-            }
-        });
-        content.add(sliderTime, BorderLayout.SOUTH);
+        chartView = new ChartView();
+        content.add(chartView, BorderLayout.CENTER);
+        
 
         panelCreation = new PanelCreation();
         panelCreation.addPropertyChangeListener(new PropertyChangeListener() {
@@ -238,26 +169,24 @@ public final class Ihm extends JFrame implements Observateur {
 
                     Element element = (Element) evt.getNewValue();
 
-                    XYSeries series = new XYSeries("Element");
-                    for (int i = element.getFirstIndex(); i <= element.getLastIndex(); i++) {
-                        Double val = listCycle.getSelectedValue().getDatasets().get(idxDataset).getDatas().get(i);
-                        series.add(listCycle.getSelectedValue().getTime().get(i), val);
+                    XYPlot plot = ((XYPlot) ((CombinedDomainXYPlot) chartView.getChartPanel().getChart().getPlot()).getSubplots().get(idxDataset));
+                    
+                    for(Object annotation : plot.getAnnotations())
+                    {
+                    	if(annotation instanceof XYShapeAnnotation)
+                    	{
+                    		plot.removeAnnotation((XYAnnotation) annotation);
+                    	}
                     }
-                    XYPlot plot = ((XYPlot) ((CombinedDomainXYPlot) chartPanel.getChart().getPlot()).getSubplots().get(idxDataset));
-                    XYSeriesCollection collection = ((XYSeriesCollection) plot.getDataset());
-                    int idx = collection.getSeriesIndex("Element");
-                    if (idx > -1) {
-                        collection.removeSeries(idx);
-                    }
-                    collection.addSeries(series);
-
-                    XYLineAndShapeRenderer renderer = ((XYLineAndShapeRenderer) plot.getRenderer(0));
-                    Paint serieColor = renderer.getSeriesPaint(0);
-
-                    renderer.setSeriesStroke(1, new BasicStroke(4));
-                    renderer.setSeriesPaint(1, serieColor);
-                    renderer.setSeriesShapesVisible(1, false);
-
+                    
+                    double x1 = listCycle.getSelectedValue().getTime().get(element.getFirstIndex());
+                    double deltaX = listCycle.getSelectedValue().getTime().get(element.getLastIndex())-x1;
+                    
+                    Range rangeAxis = plot.getRangeAxis().getRange();
+                    
+                    Rectangle2D rectangle = new Rectangle2D.Double(x1, rangeAxis.getLowerBound(), deltaX, rangeAxis.getUpperBound()-rangeAxis.getLowerBound());
+                    XYShapeAnnotation shapeAnnotation = new XYShapeAnnotation(rectangle, new BasicStroke(1), Color.BLACK, null);
+                    plot.addAnnotation(shapeAnnotation);
                 }
 
             }
@@ -433,6 +362,33 @@ public final class Ihm extends JFrame implements Observateur {
         menu.add(menuItem);
 
         menuBar.add(menu);
+        
+        menu = new JMenu("Help");
+        menuItem = new JMenuItem(new AbstractAction("Contact", new ImageIcon(getClass().getResource(CONTACT_ICON))) {
+			
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent paramActionEvent) {
+				new DialContact(Ihm.this);
+				
+			}
+		});
+        menu.add(menuItem);
+        
+        menuItem = new JMenuItem(new AbstractAction("News", new ImageIcon(getClass().getResource(NEWS_ICON))) {
+			
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent paramActionEvent) {
+				new DialNews(Ihm.this);
+				
+			}
+		});
+        menu.add(menuItem);
+        
+        menuBar.add(menu);
 
         return menuBar;
     }
@@ -450,7 +406,7 @@ public final class Ihm extends JFrame implements Observateur {
             if (result == JOptionPane.OK_OPTION) {
                 if (txtDatasets.getText().trim().length() > 0) {
                     final Cycle cycle = new Cycle(txtCycleName.getText(), formatDataset(txtDatasets.getText()));
-                    cycle.addObservateur(Ihm.this);
+                    cycle.addObservateur(chartView);
                     dataModel.addElement(cycle);
                 } else {
                     JOptionPane.showMessageDialog(Ihm.this, "You must enter at least one dataset", "Error", JOptionPane.ERROR_MESSAGE);
@@ -518,164 +474,10 @@ public final class Ihm extends JFrame implements Observateur {
                 for (File file : jFileChooser.getSelectedFiles()) {
 
                     cycle = new Cycle(file);
-                    cycle.addObservateur(Ihm.this);
+                    cycle.addObservateur(chartView);
                     dataModel.addElement(cycle);
                 }
             }
-
-        }
-    }
-
-    private final void createCombinedChart() {
-
-        final Cycle selectedCycle = listCycle.getSelectedValue();
-
-        if (selectedCycle != null) {
-            final int nbPlot = selectedCycle.getDatasets().size();
-
-            final XYSeries[] series = new XYSeries[nbPlot];
-            final XYSeriesCollection[] collections = new XYSeriesCollection[nbPlot];
-            final XYItemRenderer[] renderers = new XYLineAndShapeRenderer[nbPlot];
-            Shape diamondShape = ShapeUtilities.createDiamond(2);
-            final NumberAxis[] rangeAxiss = new NumberAxis[nbPlot];
-            final XYPlot[] subPlots = new XYPlot[nbPlot];
-
-            final CombinedDomainXYPlot plot = new CombinedDomainXYPlot();
-
-            final List<Double> temps = selectedCycle.getTime();
-            final int nbPoint = temps.size();
-
-            for (int nPlot = 0; nPlot < nbPlot; nPlot++) {
-
-                series[nPlot] = new XYSeries(selectedCycle.getDatasets().get(nPlot).getName());
-                for (int n = 0; n < nbPoint; n++) {
-
-                    int sizeData = listCycle.getSelectedValue().getDatasets().get(nPlot).getDatas().size();
-
-                    if (n < sizeData) {
-                        series[nPlot].add(temps.get(n), selectedCycle.getDatasets().get(nPlot).getDatas().get(n));
-                    }
-                }
-
-                collections[nPlot] = new XYSeriesCollection(series[nPlot]);
-                rangeAxiss[nPlot] = new NumberAxis(selectedCycle.getDatasets().get(nPlot).getName());
-                renderers[nPlot] = new XYLineAndShapeRenderer(true, true);
-                renderers[nPlot].setSeriesShape(0, diamondShape);
-                subPlots[nPlot] = new XYPlot(collections[nPlot], null, rangeAxiss[nPlot], renderers[nPlot]);
-                subPlots[nPlot].setDomainCrosshairVisible(true);
-                subPlots[nPlot].setDomainCrosshairStroke(new BasicStroke(1f));
-                subPlots[nPlot].setDomainCrosshairPaint(Color.BLACK);
-                subPlots[nPlot].addAnnotation(new XYTextAnnotation("", Double.NaN, Double.NaN));
-                plot.add(subPlots[nPlot], 1);
-            }
-
-            plot.setDomainPannable(true);
-            plot.setOrientation(PlotOrientation.VERTICAL);
-            plot.setGap(20);
-
-            chart = new JFreeChart(plot);
-
-            chartPanel.setChart(chart);
-            chartPanel.setRangeZoomable(false);
-
-            chartPanel.addChartMouseListener(new ChartMouseListener() {
-
-                @Override
-                public void chartMouseMoved(ChartMouseEvent paramChartMouseEvent) {
-
-                    JFreeChart chart = paramChartMouseEvent.getChart();
-                    XYPlot plot = (XYPlot) ((CombinedDomainXYPlot) chart.getPlot()).getSubplots().get(0);
-
-                    ChartEntity chartEntity = paramChartMouseEvent.getEntity();
-
-                    if (plot.getDatasetCount() > 0 && chartEntity instanceof PlotEntity) {
-
-                        int x = paramChartMouseEvent.getTrigger().getX(); // initialized point whenenver mouse is pressed
-                        int y = paramChartMouseEvent.getTrigger().getY();
-                        EntityCollection entities = chartPanel.getChartRenderingInfo().getEntityCollection();
-                        ChartMouseEvent cme = new ChartMouseEvent(chart, paramChartMouseEvent.getTrigger(), entities.getEntity(x, y));
-                        ChartEntity entity = cme.getEntity();
-                        if ((entity != null) && (entity instanceof XYItemEntity)) {
-                            xyItemEntity = (XYItemEntity) entity;
-                        } else if (!(entity instanceof XYItemEntity)) {
-                            xyItemEntity = null;
-                            chartPanel.setDomainZoomable(true);
-                            chartPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                            return;
-                        }
-                        if (xyItemEntity == null) {
-                            chartPanel.setDomainZoomable(true);
-                            chartPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                            return; // return if not pressed on any series point
-                        }
-
-                        Point pt = paramChartMouseEvent.getTrigger().getPoint();
-                        Rectangle2D dataAreaInfo = chartPanel.getChartRenderingInfo().getPlotInfo().getDataArea();
-                        Point2D p = chartPanel.translateScreenToJava2D(pt);
-                        initialMovePointY = xyItemEntity.getDataset().getY(0, xyItemEntity.getItem()).doubleValue();
-
-                        boolean canMove = true;
-                        chartPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-                    }
-
-                }
-
-                @Override
-                public void chartMouseClicked(ChartMouseEvent arg0) {
-                    if (chartPanel.getCursor().getType() == 12) {
-                        System.out.println("Y from dataset = " + xyItemEntity.getDataset().getY(0, xyItemEntity.getItem()));
-                    }
-
-                }
-            });
-
-            chartPanel.addMouseMotionListener(new MouseMotionListener() {
-
-                @Override
-                public void mouseMoved(MouseEvent e) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                @Override
-                public void mouseDragged(MouseEvent e) {
-                    if (chartPanel.getCursor().getType() == 12) {
-
-                        chartPanel.setDomainZoomable(false);
-
-                        System.out.println("Mouve Y point");
-                        int itemIndex = xyItemEntity.getItem();
-
-                        System.out.println("Item index = " + itemIndex);
-
-                        Point pt = e.getPoint();
-                        XYPlot xy = (XYPlot) ((CombinedDomainXYPlot) chart.getPlot()).getSubplots().get(0);
-                        XYSeries series = ((XYSeriesCollection) xy.getDataset()).getSeries(0);
-                        Rectangle2D dataArea = chartPanel.getChartRenderingInfo().getPlotInfo().getDataArea();
-                        Point2D p = chartPanel.translateScreenToJava2D(pt);
-                        finalMovePointY = xy.getRangeAxis().java2DToValue(p.getY(), dataArea, xy.getRangeAxisEdge());
-
-                        System.out.println(finalMovePointY);
-
-                        double difference = finalMovePointY - initialMovePointY;
-
-                        // retrict movement for upper and lower limit (upper limit
-                        // should be as per application needs)
-                        double targetPoint = series.getY(itemIndex).doubleValue() + difference;
-
-                        System.out.println("Target = " + targetPoint);
-
-                        // series.update(Integer.valueOf(itemIndex), Double.valueOf(targetPoint));
-                        series.updateByIndex(itemIndex, Double.valueOf(targetPoint));
-                        chart.fireChartChanged();
-                        chartPanel.updateUI();
-                        initialMovePointY = finalMovePointY;
-
-                    }
-
-                }
-            });
 
         }
     }
@@ -732,14 +534,6 @@ public final class Ihm extends JFrame implements Observateur {
             panelCreation.configure(listCycle.getSelectedValue(), e.getActionCommand());
         }
 
-    }
-
-    @Override
-    public void update(String property) {
-        createCombinedChart();
-        int nbPoint = listCycle.getSelectedValue().getNbPoint();
-        int sliderValue = boundedRangeModel.getValue();
-        boundedRangeModel.setRangeProperties(sliderValue, 0, 0, nbPoint - 1, true);
     }
 
 }

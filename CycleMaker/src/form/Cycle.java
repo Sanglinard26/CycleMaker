@@ -201,6 +201,7 @@ public final class Cycle implements Observable, Serializable {
 
     public final void removeDataset(Dataset dataset) {
         this.datasets.remove(dataset);
+        updateObservateur("Dataset");
     }
 
     public List<Dataset> getDatasets() {
@@ -387,7 +388,7 @@ public final class Cycle implements Observable, Serializable {
             super();
         }
 
-        public void update() {
+        public final void update() {
 
             int nbPoint = 0;
             int diffPoint = 0;
@@ -407,7 +408,6 @@ public final class Cycle implements Observable, Serializable {
             }
 
         }
-
     }
 
     @Override
