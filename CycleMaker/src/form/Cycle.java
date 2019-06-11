@@ -185,11 +185,10 @@ public final class Cycle implements Observable, Serializable {
     public String getName() {
         return name;
     }
-    
-    public final int getNbPoint()
-    {
-    	this.baseTime.update();
-    	return this.baseTime.size();
+
+    public final int getNbPoint() {
+        this.baseTime.update();
+        return this.baseTime.size();
     }
 
     public final void addDataset(String name) {
@@ -219,6 +218,14 @@ public final class Cycle implements Observable, Serializable {
             }
         }
         return null;
+    }
+
+    public final double getTotalTime() {
+        int lastIndex = getTime().size() - 1;
+        if (lastIndex > 0) {
+            return getTime().get(lastIndex);
+        }
+        return 0;
     }
 
     public final Time getTime() {

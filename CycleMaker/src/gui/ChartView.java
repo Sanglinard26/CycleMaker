@@ -52,303 +52,300 @@ import observer.Observateur;
 
 public final class ChartView extends JPanel implements ChartMouseListener, MouseMotionListener, MouseListener, Observateur {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final ChartPanel chartPanel;
-	private JFreeChart chart = null;
-	private XYItemEntity xyItemEntity = null;
-	private double initialMovePointY = Double.NaN;
-	private double finalMovePointY = Double.NaN;
+    private final ChartPanel chartPanel;
+    private JFreeChart chart = null;
+    private XYItemEntity xyItemEntity = null;
+    private double initialMovePointY = Double.NaN;
+    private double finalMovePointY = Double.NaN;
 
-	private final BoundedRangeModel boundedRangeModel;
-	private final JSlider sliderTime;
+    private final BoundedRangeModel boundedRangeModel;
+    private final JSlider sliderTime;
 
-	private Cycle selectedCycle;
+    private Cycle selectedCycle;
 
-	public ChartView() {
-		setLayout(new BorderLayout());
-		setBorder(BorderFactory.createLineBorder(Color.GRAY));
+    public ChartView() {
+        setLayout(new BorderLayout());
+        setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
-		chartPanel = new ChartPanel(null);
-		chartPanel.setPopupMenu(null);
-		chartPanel.addChartMouseListener(this);
-		chartPanel.addMouseMotionListener(this);
-		chartPanel.addMouseListener(this);
-		add(chartPanel, BorderLayout.CENTER);
+        chartPanel = new ChartPanel(null, 680, 420, 300, 200, 1920, 1080, true, true, false, false, true, false);
+        chartPanel.setPopupMenu(null);
+        chartPanel.addChartMouseListener(this);
+        chartPanel.addMouseMotionListener(this);
+        chartPanel.addMouseListener(this);
+        add(chartPanel, BorderLayout.CENTER);
 
-		boundedRangeModel = new DefaultBoundedRangeModel(0, 0, 0, 1);
-		boundedRangeModel.addChangeListener(new ChangeListener() {
+        boundedRangeModel = new DefaultBoundedRangeModel(0, 0, 0, 1);
+        boundedRangeModel.addChangeListener(new ChangeListener() {
 
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				updateCursor(e);
-			}
-		});
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                updateCursor(e);
+            }
+        });
 
-		sliderTime = new JSlider(boundedRangeModel);
-		sliderTime.setVisible(false);
-		add(sliderTime, BorderLayout.SOUTH);
-	}
-	
-	public final ChartPanel getChartPanel() {
-		return chartPanel;
-	}
+        sliderTime = new JSlider(boundedRangeModel);
+        sliderTime.setVisible(false);
+        add(sliderTime, BorderLayout.SOUTH);
+    }
 
-	private final void updateCursor(EventObject event)
-	{
-		CombinedDomainXYPlot plot = (CombinedDomainXYPlot) chartPanel.getChart().getPlot();
+    public final ChartPanel getChartPanel() {
+        return chartPanel;
+    }
 
-		@SuppressWarnings("unchecked")
-		List<XYPlot> subPlots = plot.getSubplots();
+    private final void updateCursor(EventObject event) {
+        CombinedDomainXYPlot plot = (CombinedDomainXYPlot) chartPanel.getChart().getPlot();
 
-		double xVal = Double.NaN;
-		double yVal = Double.NaN;
+        @SuppressWarnings("unchecked")
+        List<XYPlot> subPlots = plot.getSubplots();
 
+        double xVal = Double.NaN;
+        double yVal = Double.NaN;
 
-		for (XYPlot subplot : subPlots) {
+        for (XYPlot subplot : subPlots) {
 
-			if(event.getSource() instanceof JFreeChart)
-			{
-				xVal = subplot.getDomainCrosshairValue();
-				yVal = DatasetUtilities.findYValue(subplot.getDataset(), 0, xVal);
-			}else{
-				int xIndex = boundedRangeModel.getValue();
-				if(selectedCycle.getTime().isEmpty())
-				{
-					return;
-				}
-				xVal = selectedCycle.getTime().get(xIndex);
-				subplot.setDomainCrosshairValue(xVal);
-				if (xIndex < subplot.getDataset().getItemCount(0)) {
-					yVal = subplot.getDataset().getYValue(0, xIndex);
-				}
-			}
+            if (event.getSource() instanceof JFreeChart) {
+                xVal = subplot.getDomainCrosshairValue();
+                yVal = DatasetUtilities.findYValue(subplot.getDataset(), 0, xVal);
+            } else {
+                int xIndex = boundedRangeModel.getValue();
+                if (selectedCycle.getTime().isEmpty()) {
+                    return;
+                }
+                xVal = selectedCycle.getTime().get(xIndex);
+                subplot.setDomainCrosshairValue(xVal);
+                if (xIndex < subplot.getDataset().getItemCount(0)) {
+                    yVal = subplot.getDataset().getYValue(0, xIndex);
+                }
+            }
 
+            XYTextAnnotation txtAnnot = (XYTextAnnotation) subplot.getAnnotations().get(0);
+            txtAnnot.setX(xVal);
 
-			XYTextAnnotation txtAnnot = (XYTextAnnotation) subplot.getAnnotations().get(0);
-			txtAnnot.setX(xVal);
+            String txtVal = String.format("%.2f", yVal);
+            txtAnnot.setText(txtVal);
 
-			String txtVal = String.format("%.2f", yVal);
-			txtAnnot.setText(txtVal);
+            txtAnnot.setY(yVal);
+            txtAnnot.setTextAnchor(TextAnchor.BOTTOM_RIGHT);
+            txtAnnot.setOutlineVisible(true);
+            txtAnnot.setBackgroundPaint(Color.WHITE);
+        }
+    }
 
-			txtAnnot.setY(yVal);
-			txtAnnot.setTextAnchor(TextAnchor.BOTTOM_RIGHT);
-			txtAnnot.setOutlineVisible(true);
-			txtAnnot.setBackgroundPaint(Color.WHITE);
-		}
-	}
+    public final void createCombinedChart(Cycle cycle) {
 
-	public final void createCombinedChart(Cycle cycle) {
+        if (cycle != null) {
+            this.selectedCycle = cycle;
 
-		if (cycle != null) {
-			this.selectedCycle = cycle;
+            final int nbPlot = selectedCycle.getDatasets().size();
 
-			final int nbPlot = selectedCycle.getDatasets().size();
+            final XYSeries[] series = new XYSeries[nbPlot];
+            final XYSeriesCollection[] collections = new XYSeriesCollection[nbPlot];
+            final XYItemRenderer[] renderers = new XYLineAndShapeRenderer[nbPlot];
+            Shape diamondShape = ShapeUtilities.createDiamond(2);
+            final NumberAxis[] rangeAxiss = new NumberAxis[nbPlot];
+            final XYPlot[] subPlots = new XYPlot[nbPlot];
 
-			final XYSeries[] series = new XYSeries[nbPlot];
-			final XYSeriesCollection[] collections = new XYSeriesCollection[nbPlot];
-			final XYItemRenderer[] renderers = new XYLineAndShapeRenderer[nbPlot];
-			Shape diamondShape = ShapeUtilities.createDiamond(2);
-			final NumberAxis[] rangeAxiss = new NumberAxis[nbPlot];
-			final XYPlot[] subPlots = new XYPlot[nbPlot];
+            final CombinedDomainXYPlot plot = new CombinedDomainXYPlot();
 
-			final CombinedDomainXYPlot plot = new CombinedDomainXYPlot();
+            final List<Double> temps = selectedCycle.getTime();
+            final int nbPoint = temps.size();
 
-			final List<Double> temps = selectedCycle.getTime();
-			final int nbPoint = temps.size();
+            for (int nPlot = 0; nPlot < nbPlot; nPlot++) {
 
-			for (int nPlot = 0; nPlot < nbPlot; nPlot++) {
+                series[nPlot] = new XYSeries(selectedCycle.getDatasets().get(nPlot).getName());
+                for (int n = 0; n < nbPoint; n++) {
 
-				series[nPlot] = new XYSeries(selectedCycle.getDatasets().get(nPlot).getName());
-				for (int n = 0; n < nbPoint; n++) {
+                    int sizeData = selectedCycle.getDatasets().get(nPlot).getDatas().size();
 
-					int sizeData = selectedCycle.getDatasets().get(nPlot).getDatas().size();
+                    if (n < sizeData) {
+                        series[nPlot].add(temps.get(n), selectedCycle.getDatasets().get(nPlot).getDatas().get(n));
+                    }
+                }
 
-					if (n < sizeData) {
-						series[nPlot].add(temps.get(n), selectedCycle.getDatasets().get(nPlot).getDatas().get(n));
-					}
-				}
+                collections[nPlot] = new XYSeriesCollection(series[nPlot]);
+                rangeAxiss[nPlot] = new NumberAxis(selectedCycle.getDatasets().get(nPlot).getName());
+                renderers[nPlot] = new XYLineAndShapeRenderer(true, true);
+                renderers[nPlot].setSeriesShape(0, diamondShape);
+                subPlots[nPlot] = new XYPlot(collections[nPlot], null, rangeAxiss[nPlot], renderers[nPlot]);
+                subPlots[nPlot].setDomainCrosshairVisible(true);
+                subPlots[nPlot].setDomainCrosshairStroke(new BasicStroke(1f));
+                subPlots[nPlot].setDomainCrosshairPaint(Color.BLACK);
+                subPlots[nPlot].addAnnotation(new XYTextAnnotation("", Double.NaN, Double.NaN));
+                plot.add(subPlots[nPlot], 1);
+            }
 
-				collections[nPlot] = new XYSeriesCollection(series[nPlot]);
-				rangeAxiss[nPlot] = new NumberAxis(selectedCycle.getDatasets().get(nPlot).getName());
-				renderers[nPlot] = new XYLineAndShapeRenderer(true, true);
-				renderers[nPlot].setSeriesShape(0, diamondShape);
-				subPlots[nPlot] = new XYPlot(collections[nPlot], null, rangeAxiss[nPlot], renderers[nPlot]);
-				subPlots[nPlot].setDomainCrosshairVisible(true);
-				subPlots[nPlot].setDomainCrosshairStroke(new BasicStroke(1f));
-				subPlots[nPlot].setDomainCrosshairPaint(Color.BLACK);
-				subPlots[nPlot].addAnnotation(new XYTextAnnotation("", Double.NaN, Double.NaN));
-				plot.add(subPlots[nPlot], 1);
-			}
+            plot.setDomainPannable(true);
+            plot.setOrientation(PlotOrientation.VERTICAL);
+            plot.setGap(20);
 
-			plot.setDomainPannable(true);
-			plot.setOrientation(PlotOrientation.VERTICAL);
-			plot.setGap(20);
+            chart = new JFreeChart(plot);
 
-			chart = new JFreeChart(plot);
+            chartPanel.setChart(chart);
+            chartPanel.setRangeZoomable(false);
 
-			chartPanel.setChart(chart);
-			chartPanel.setRangeZoomable(false);
+            updateSlider();
+            sliderTime.setVisible(true);
+        }
+    }
 
-			updateSlider();
-			sliderTime.setVisible(true);
-		}
-	}
+    @Override
+    public void chartMouseClicked(ChartMouseEvent paramChartMouseEvent) {
+        ChartEntity entity = paramChartMouseEvent.getEntity();
 
-	@Override
-	public void chartMouseClicked(ChartMouseEvent paramChartMouseEvent) {
-		ChartEntity entity = paramChartMouseEvent.getEntity();
+        if (entity instanceof PlotEntity) {
+            PlotEntity plotEntity = (PlotEntity) entity;
+            XYPlot xyPlot = (XYPlot) plotEntity.getPlot();
+            xyPlot.handleClick(paramChartMouseEvent.getTrigger().getX(), paramChartMouseEvent.getTrigger().getY(),
+                    chartPanel.getChartRenderingInfo().getPlotInfo());
 
-		if(entity instanceof PlotEntity)
-		{			
-			PlotEntity plotEntity = (PlotEntity) entity;
-			XYPlot xyPlot = (XYPlot) plotEntity.getPlot();
-			xyPlot.handleClick(paramChartMouseEvent.getTrigger().getX(), paramChartMouseEvent.getTrigger().getY(), chartPanel.getChartRenderingInfo().getPlotInfo());
+            double crossHairValue = xyPlot.getDomainCrosshairValue();
+            int[] xIndex = DatasetUtilities.findItemIndicesForX(xyPlot.getDataset(), 0, crossHairValue);
+            boundedRangeModel.setValue(xIndex[1]);
+        }
+    }
 
-			double crossHairValue = xyPlot.getDomainCrosshairValue();
-			int[] xIndex = DatasetUtilities.findItemIndicesForX(xyPlot.getDataset(), 0, crossHairValue);
-			boundedRangeModel.setValue(xIndex[1]);
-		}
-	}
+    @Override
+    public void chartMouseMoved(ChartMouseEvent paramChartMouseEvent) {
 
-	@Override
-	public void chartMouseMoved(ChartMouseEvent paramChartMouseEvent) {
+        Point pt = paramChartMouseEvent.getTrigger().getPoint();
+        XYPlot plot = ((CombinedDomainXYPlot) chart.getPlot()).findSubplot(chartPanel.getChartRenderingInfo().getPlotInfo(), pt);
 
-		Point pt = paramChartMouseEvent.getTrigger().getPoint();
-		XYPlot plot = (XYPlot) ((CombinedDomainXYPlot) chart.getPlot()).findSubplot(chartPanel.getChartRenderingInfo().getPlotInfo(), pt);
-		
-		if (plot != null && plot.getDatasetCount() > 0) {
+        if (plot != null && plot.getDatasetCount() > 0) {
 
-			int x = paramChartMouseEvent.getTrigger().getX();
-			int y = paramChartMouseEvent.getTrigger().getY();
-			EntityCollection entities = chartPanel.getChartRenderingInfo().getEntityCollection();
-			ChartEntity entity = entities.getEntity(x, y);
-			if ((entity != null) && (entity instanceof XYItemEntity)) {
-				xyItemEntity = (XYItemEntity) entity;
-			} else if (!(entity instanceof XYItemEntity)) {
-				xyItemEntity = null;
-				chartPanel.setDomainZoomable(true);
-				this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-				return;
-			}
-			if (xyItemEntity == null) {
-				chartPanel.setDomainZoomable(true);
-				this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-				return; // return if not pressed on any series point
-			}
+            Point2D p2d = chartPanel.translateScreenToJava2D(pt);
 
-			initialMovePointY = xyItemEntity.getDataset().getY(0, xyItemEntity.getItem()).doubleValue();
+            EntityCollection entities = chartPanel.getChartRenderingInfo().getEntityCollection();
 
-			this.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            ChartEntity entity = entities.getEntity(p2d.getX(), p2d.getY());
 
-		}
+            if ((entity != null) && (entity instanceof XYItemEntity)) {
+                xyItemEntity = (XYItemEntity) entity;
+            } else if (!(entity instanceof XYItemEntity)) {
+                xyItemEntity = null;
+                chartPanel.setDomainZoomable(true);
+                this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                return;
+            }
+            if (xyItemEntity == null) {
+                chartPanel.setDomainZoomable(true);
+                this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                return; // return if not pressed on any series point
+            }
 
-	}
+            initialMovePointY = xyItemEntity.getDataset().getY(0, xyItemEntity.getItem()).doubleValue();
 
-	@Override
-	public void mouseDragged(MouseEvent e) {
+            this.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-		if (this.getCursor().getType() != Cursor.DEFAULT_CURSOR) {
-			
-			this.setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
+        }
 
-			chartPanel.setDomainZoomable(false);
+    }
 
-			int itemIndex = xyItemEntity.getItem();
+    @Override
+    public void mouseDragged(MouseEvent e) {
 
-			Point pt = e.getPoint();
-			XYPlot xy = (XYPlot) ((CombinedDomainXYPlot) chart.getPlot()).findSubplot(chartPanel.getChartRenderingInfo().getPlotInfo(), pt);
-			if(xy == null)
-			{
-				return;
-			}
-			XYSeries series = ((XYSeriesCollection) xyItemEntity.getDataset()).getSeries(0);
-			Point2D p = chartPanel.translateScreenToJava2D(pt);
-			int subPlotIndex = chartPanel.getChartRenderingInfo().getPlotInfo().getSubplotIndex(p);
-			Rectangle2D dataArea = chartPanel.getChartRenderingInfo().getPlotInfo().getSubplotInfo(subPlotIndex).getDataArea();
-			
-			finalMovePointY = xy.getRangeAxis().java2DToValue(p.getY(), dataArea, xy.getRangeAxisEdge());
+        if (this.getCursor().getType() != Cursor.DEFAULT_CURSOR) {
 
-			double difference = finalMovePointY - initialMovePointY;
+            this.setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
 
-			double targetPoint = series.getY(itemIndex).doubleValue() + difference;
+            chartPanel.setDomainZoomable(false);
 
-			series.updateByIndex(itemIndex, Double.valueOf(targetPoint));
+            int itemIndex = xyItemEntity.getItem();
 
-			initialMovePointY = finalMovePointY;
-			
-			selectedCycle.getDataset(series.getKey().toString()).getDatas().set(itemIndex, targetPoint);
+            Point pt = e.getPoint();
+            XYPlot xy = ((CombinedDomainXYPlot) chart.getPlot()).findSubplot(chartPanel.getChartRenderingInfo().getPlotInfo(), pt);
+            if (xy == null) {
+                return;
+            }
+            XYSeries series = ((XYSeriesCollection) xyItemEntity.getDataset()).getSeries(0);
+            Point2D p = chartPanel.translateScreenToJava2D(pt);
+            int subPlotIndex = chartPanel.getChartRenderingInfo().getPlotInfo().getSubplotIndex(p);
+            if (subPlotIndex < 0) {
+                return;
+            }
+            Rectangle2D dataArea = chartPanel.getChartRenderingInfo().getPlotInfo().getSubplotInfo(subPlotIndex).getDataArea();
 
-			boundedRangeModel.setValue(itemIndex);
-			updateCursor(e);
-		}
-	}
+            finalMovePointY = xy.getRangeAxis().java2DToValue(p.getY(), dataArea, xy.getRangeAxisEdge());
 
-	@Override
-	public void mouseMoved(MouseEvent paramMouseEvent) {
-		// TODO Auto-generated method stub
+            double difference = finalMovePointY - initialMovePointY;
 
-	}
-	
-	public final void updateSlider()
-	{
-		int nbPoint = selectedCycle.getNbPoint();
-		int sliderValue = boundedRangeModel.getValue();
-		boundedRangeModel.setRangeProperties(sliderValue, 0, 0, nbPoint - 1, true);	
-	}
+            double targetPoint = series.getY(itemIndex).doubleValue() + difference;
 
+            series.updateByIndex(itemIndex, Double.valueOf(targetPoint));
 
-	@Override
-	public void update(String property) {
-		this.createCombinedChart(selectedCycle);
-		updateSlider();
-	}
+            initialMovePointY = finalMovePointY;
 
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		if(this.getCursor().getType() == 12 && e.getClickCount()>1)
-		{
-			double currentYval = xyItemEntity.getDataset().getY(0, xyItemEntity.getItem()).doubleValue();
-			
-			final JTextField txtYval = new JTextField("", 30);
-            final JComponent[] inputs = new JComponent[] { new JLabel("New Yvalue (current = " + currentYval + ")"), txtYval};
+            selectedCycle.getDataset(series.getKey().toString()).getDatas().set(itemIndex, targetPoint);
+
+            boundedRangeModel.setValue(itemIndex);
+            updateCursor(e);
+        }
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent paramMouseEvent) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public final void updateSlider() {
+        int nbPoint = selectedCycle.getNbPoint() - 1;
+        int sliderValue = Math.min(nbPoint, boundedRangeModel.getValue());
+        boundedRangeModel.setRangeProperties(sliderValue, 0, 0, nbPoint, true);
+    }
+
+    @Override
+    public void update(String property) {
+        this.createCombinedChart(selectedCycle);
+        updateSlider();
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        if (this.getCursor().getType() == 12 && e.getClickCount() > 1) {
+            double currentYval = xyItemEntity.getDataset().getY(0, xyItemEntity.getItem()).doubleValue();
+
+            final JTextField txtYval = new JTextField("", 30);
+            final JComponent[] inputs = new JComponent[] { new JLabel("New Yvalue (current = " + currentYval + ")"), txtYval };
             int result = JOptionPane.showConfirmDialog(null, inputs, "Dataset modification", JOptionPane.PLAIN_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
                 try {
-					double newYval = Double.parseDouble(txtYval.getText());
-					XYSeries series = ((XYSeriesCollection) xyItemEntity.getDataset()).getSeries(0);
-					series.updateByIndex(xyItemEntity.getItem(), newYval);
-					selectedCycle.getDataset(series.getKey().toString()).getDatas().set(xyItemEntity.getItem(), newYval);
-				} catch (NumberFormatException nfe) {
-					JOptionPane.showMessageDialog(ChartView.this.getParent(), "You must enter a number!", "Error", JOptionPane.ERROR_MESSAGE);
-				}
+                    double newYval = Double.parseDouble(txtYval.getText());
+                    XYSeries series = ((XYSeriesCollection) xyItemEntity.getDataset()).getSeries(0);
+                    series.updateByIndex(xyItemEntity.getItem(), newYval);
+                    selectedCycle.getDataset(series.getKey().toString()).getDatas().set(xyItemEntity.getItem(), newYval);
+                    updateCursor(e);
+                } catch (NumberFormatException nfe) {
+                    JOptionPane.showMessageDialog(ChartView.this.getParent(), "You must enter a number!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
-		}
-		
-	}
+        }
 
-	@Override
-	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+    }
 
-	@Override
-	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        // TODO Auto-generated method stub
 
-	@Override
-	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+    }
 
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void mouseExited(MouseEvent e) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        // TODO Auto-generated method stub
+
+    }
 
 }

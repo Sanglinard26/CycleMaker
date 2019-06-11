@@ -49,7 +49,6 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
-
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
@@ -63,12 +62,13 @@ import org.jfree.data.Range;
 
 import form.Cycle;
 import form.Element;
+import observer.Observateur;
 import utils.Utilitaire;
 
-public final class Ihm extends JFrame {
+public final class Ihm extends JFrame implements Observateur {
 
     private static final long serialVersionUID = 1L;
-    
+
     private static final String APP_ICON = "/app_icon_32.png";
     private static final String CONTACT_ICON = "/contact_icon_16.png";
     private static final String NEWS_ICON = "/new_icon_16.png";
@@ -97,6 +97,7 @@ public final class Ihm extends JFrame {
 
         dataModel = new DefaultListModel<>();
         listCycle = new JList<Cycle>(dataModel);
+        listCycle.setCellRenderer(new ListCycleRenderer());
         listCycle.setFixedCellWidth(200);
         listCycle.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         listCycle.addListSelectionListener(new ListSelectionListener() {
@@ -156,7 +157,6 @@ public final class Ihm extends JFrame {
 
         chartView = new ChartView();
         content.add(chartView, BorderLayout.CENTER);
-        
 
         panelCreation = new PanelCreation();
         panelCreation.addPropertyChangeListener(new PropertyChangeListener() {
@@ -170,21 +170,20 @@ public final class Ihm extends JFrame {
                     Element element = (Element) evt.getNewValue();
 
                     XYPlot plot = ((XYPlot) ((CombinedDomainXYPlot) chartView.getChartPanel().getChart().getPlot()).getSubplots().get(idxDataset));
-                    
-                    for(Object annotation : plot.getAnnotations())
-                    {
-                    	if(annotation instanceof XYShapeAnnotation)
-                    	{
-                    		plot.removeAnnotation((XYAnnotation) annotation);
-                    	}
+
+                    for (Object annotation : plot.getAnnotations()) {
+                        if (annotation instanceof XYShapeAnnotation) {
+                            plot.removeAnnotation((XYAnnotation) annotation);
+                        }
                     }
-                    
+
                     double x1 = listCycle.getSelectedValue().getTime().get(element.getFirstIndex());
-                    double deltaX = listCycle.getSelectedValue().getTime().get(element.getLastIndex())-x1;
-                    
+                    double deltaX = listCycle.getSelectedValue().getTime().get(element.getLastIndex()) - x1;
+
                     Range rangeAxis = plot.getRangeAxis().getRange();
-                    
-                    Rectangle2D rectangle = new Rectangle2D.Double(x1, rangeAxis.getLowerBound(), deltaX, rangeAxis.getUpperBound()-rangeAxis.getLowerBound());
+
+                    Rectangle2D rectangle = new Rectangle2D.Double(x1, rangeAxis.getLowerBound(), deltaX,
+                            rangeAxis.getUpperBound() - rangeAxis.getLowerBound());
                     XYShapeAnnotation shapeAnnotation = new XYShapeAnnotation(rectangle, new BasicStroke(1), Color.BLACK, null);
                     plot.addAnnotation(shapeAnnotation);
                 }
@@ -362,32 +361,32 @@ public final class Ihm extends JFrame {
         menu.add(menuItem);
 
         menuBar.add(menu);
-        
+
         menu = new JMenu("Help");
         menuItem = new JMenuItem(new AbstractAction("Contact", new ImageIcon(getClass().getResource(CONTACT_ICON))) {
-			
-			private static final long serialVersionUID = 1L;
 
-			@Override
-			public void actionPerformed(ActionEvent paramActionEvent) {
-				new DialContact(Ihm.this);
-				
-			}
-		});
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed(ActionEvent paramActionEvent) {
+                new DialContact(Ihm.this);
+
+            }
+        });
         menu.add(menuItem);
-        
+
         menuItem = new JMenuItem(new AbstractAction("News", new ImageIcon(getClass().getResource(NEWS_ICON))) {
-			
-			private static final long serialVersionUID = 1L;
 
-			@Override
-			public void actionPerformed(ActionEvent paramActionEvent) {
-				new DialNews(Ihm.this);
-				
-			}
-		});
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed(ActionEvent paramActionEvent) {
+                new DialNews(Ihm.this);
+
+            }
+        });
         menu.add(menuItem);
-        
+
         menuBar.add(menu);
 
         return menuBar;
@@ -407,6 +406,7 @@ public final class Ihm extends JFrame {
                 if (txtDatasets.getText().trim().length() > 0) {
                     final Cycle cycle = new Cycle(txtCycleName.getText(), formatDataset(txtDatasets.getText()));
                     cycle.addObservateur(chartView);
+                    cycle.addObservateur(Ihm.this);
                     dataModel.addElement(cycle);
                 } else {
                     JOptionPane.showMessageDialog(Ihm.this, "You must enter at least one dataset", "Error", JOptionPane.ERROR_MESSAGE);
@@ -475,6 +475,7 @@ public final class Ihm extends JFrame {
 
                     cycle = new Cycle(file);
                     cycle.addObservateur(chartView);
+                    cycle.addObservateur(Ihm.this);
                     dataModel.addElement(cycle);
                 }
             }
@@ -534,6 +535,11 @@ public final class Ihm extends JFrame {
             panelCreation.configure(listCycle.getSelectedValue(), e.getActionCommand());
         }
 
+    }
+
+    @Override
+    public void update(String property) {
+        listCycle.repaint();
     }
 
 }
