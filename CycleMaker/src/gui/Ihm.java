@@ -134,7 +134,7 @@ public final class Ihm extends JFrame implements Observateur {
                     listCycle.clearSelection();
 
                     panelCreation.setCycle(null);
-                    chartView.getChartPanel().setChart(null);
+                    chartView.createCombinedChart(null);
 
                     pcsBtDesign.firePropertyChange(JToggleButton.MODEL_CHANGED_PROPERTY, designMode, false);
 
@@ -152,8 +152,8 @@ public final class Ihm extends JFrame implements Observateur {
             }
         });
 
-        content.add(new JScrollPane(listCycle, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED),
-                BorderLayout.WEST);
+        JScrollPane jScrollPane = new JScrollPane(listCycle, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        content.add(jScrollPane, BorderLayout.WEST);
 
         chartView = new ChartView();
         content.add(chartView, BorderLayout.CENTER);
@@ -193,6 +193,7 @@ public final class Ihm extends JFrame implements Observateur {
         content.add(panelCreation, BorderLayout.EAST);
 
         pack();
+        setMinimumSize(new Dimension(getWidth(), getHeight()));
 
         panelCreation.setVisible(false);
 

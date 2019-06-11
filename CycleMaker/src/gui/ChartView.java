@@ -4,6 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Font;
 import java.awt.Point;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
@@ -23,6 +24,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -62,6 +64,7 @@ public final class ChartView extends JPanel implements ChartMouseListener, Mouse
 
     private final BoundedRangeModel boundedRangeModel;
     private final JSlider sliderTime;
+    private final JLabel cycleName;
 
     private Cycle selectedCycle;
 
@@ -69,6 +72,12 @@ public final class ChartView extends JPanel implements ChartMouseListener, Mouse
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
+        cycleName = new JLabel();
+        cycleName.setHorizontalAlignment(SwingConstants.CENTER);
+        cycleName.setFont(new Font(null, Font.BOLD, 14));
+        cycleName.setBorder(BorderFactory.createEmptyBorder(10, 0, 5, 0));
+        add(cycleName, BorderLayout.NORTH);
+        
         chartPanel = new ChartPanel(null, 680, 420, 300, 200, 1920, 1080, true, true, false, false, true, false);
         chartPanel.setPopupMenu(null);
         chartPanel.addChartMouseListener(this);
@@ -137,6 +146,8 @@ public final class ChartView extends JPanel implements ChartMouseListener, Mouse
 
         if (cycle != null) {
             this.selectedCycle = cycle;
+            
+            this.cycleName.setText(this.selectedCycle.getName());
 
             final int nbPlot = selectedCycle.getDatasets().size();
 
@@ -187,6 +198,9 @@ public final class ChartView extends JPanel implements ChartMouseListener, Mouse
 
             updateSlider();
             sliderTime.setVisible(true);
+        }else{
+        	chartPanel.setChart(null);
+        	this.cycleName.setText(null);
         }
     }
 
@@ -202,7 +216,19 @@ public final class ChartView extends JPanel implements ChartMouseListener, Mouse
 
             double crossHairValue = xyPlot.getDomainCrosshairValue();
             int[] xIndex = DatasetUtilities.findItemIndicesForX(xyPlot.getDataset(), 0, crossHairValue);
-            boundedRangeModel.setValue(xIndex[1]);
+            if(xIndex[0] > -1 && xIndex[1] > -1)
+            {
+            	double xValue1 = xyPlot.getDataset().getXValue(0, xIndex[0]);
+                double xValue2 = xyPlot.getDataset().getXValue(0, xIndex[1]);
+                double diffXvalue1 = Math.abs(xValue1-crossHairValue);
+                double diffXvalue2 = Math.abs(xValue2-crossHairValue);
+                if(diffXvalue1<diffXvalue2)
+                {
+                	boundedRangeModel.setValue(xIndex[0]);
+                }else{
+                	boundedRangeModel.setValue(xIndex[1]);
+                }
+            }
         }
     }
 

@@ -187,7 +187,7 @@ public final class Cycle implements Observable, Serializable {
     }
 
     public final int getNbPoint() {
-        this.baseTime.update();
+        this.baseTime.grow();
         return this.baseTime.size();
     }
 
@@ -221,9 +221,15 @@ public final class Cycle implements Observable, Serializable {
     }
 
     public final double getTotalTime() {
-        int lastIndex = getTime().size() - 1;
-        if (lastIndex > 0) {
-            return getTime().get(lastIndex);
+    	
+    	this.baseTime.grow();
+        int nbPoint = Integer.MAX_VALUE;
+        for(Dataset dataset : this.getDatasets())
+        {
+        	nbPoint = Math.min(nbPoint, dataset.getNbPoint());
+        }
+        if (nbPoint > 0) {
+            return this.baseTime.get(nbPoint-1);
         }
         return 0;
     }
@@ -243,7 +249,7 @@ public final class Cycle implements Observable, Serializable {
     public final void addElementToDataset(Dataset dataset, Element form) {
 
         dataset.addElement(form);
-        this.baseTime.update();
+        this.baseTime.grow();
 
         form.setT1(this.baseTime.get(form.getFirstIndex()));
         form.setT2(this.baseTime.get(form.getLastIndex()));
@@ -260,7 +266,7 @@ public final class Cycle implements Observable, Serializable {
 
         dataset.addElement(position, form);
 
-        this.baseTime.update();
+        this.baseTime.grow();
 
         List<Double> moveDatas = new ArrayList<Double>();
 
@@ -395,7 +401,7 @@ public final class Cycle implements Observable, Serializable {
             super();
         }
 
-        public final void update() {
+        public final void grow() {
 
             int nbPoint = 0;
             int diffPoint = 0;
