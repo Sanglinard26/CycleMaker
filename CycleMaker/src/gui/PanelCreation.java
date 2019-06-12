@@ -213,12 +213,12 @@ public final class PanelCreation extends JPanel {
                                 }
 
                                 if (newElement != null) {
-                                	
-                                	if(modelElement.getRowCount() == 0 && !Element.POINT.equals(selectedForm))
-                                	{
-                                		JOptionPane.showMessageDialog(PanelCreation.this.getParent(), "The first element must be a <Point>", "Info", JOptionPane.INFORMATION_MESSAGE);
-                                		return;
-                                	}
+
+                                    if (modelElement.getRowCount() == 0 && !Element.POINT.equals(selectedForm)) {
+                                        JOptionPane.showMessageDialog(PanelCreation.this.getParent(), "The first element must be a <Point>", "Info",
+                                                JOptionPane.INFORMATION_MESSAGE);
+                                        return;
+                                    }
 
                                     if (txtPosition.getText().isEmpty()) {
                                         cycle.addElementToDataset(grandeur, newElement);
@@ -603,7 +603,7 @@ public final class PanelCreation extends JPanel {
                 comboBoxModel.addElement(dataset);
             }
         }
-        comBoDataset.combo.setSelectedIndex(comBoDataset.combo.getItemCount()-1);
+        comBoDataset.combo.setSelectedIndex(comBoDataset.combo.getItemCount() - 1);
     }
 
     public final int getIndexDataset() {
@@ -647,12 +647,13 @@ public final class PanelCreation extends JPanel {
         private final JComboBox<Dataset> combo;
         private final JButton btAdd;
         private final JButton btDel;
+        private final JButton btRename;
 
         public ComBoDataset(DefaultComboBoxModel<Dataset> model) {
             super();
             setOpaque(true);
             setLayout(new GridBagLayout());
-            
+
             GridBagConstraints gbc = new GridBagConstraints();
 
             this.combo = new JComboBox<Dataset>(model);
@@ -692,7 +693,7 @@ public final class PanelCreation extends JPanel {
 
                 }
             });
-            
+
             this.btDel = new JButton(new AbstractAction("<html><b>-</b></html>") {
 
                 private static final long serialVersionUID = 1L;
@@ -700,32 +701,55 @@ public final class PanelCreation extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (comboBoxModel.getSize() > 1) {
-                    	cycle.removeDataset(getSelectedDataset());
-                    	fillDataset();
-                    }else{
-                    	JOptionPane.showMessageDialog(PanelCreation.this.getParent(), "At least one dataset is required, add one dataset before deleting this one.", "Info", JOptionPane.INFORMATION_MESSAGE);
+                        cycle.removeDataset(getSelectedDataset());
+                        fillDataset();
+                    } else {
+                        JOptionPane.showMessageDialog(PanelCreation.this.getParent(),
+                                "At least one dataset is required, add one dataset before deleting this one.", "Info",
+                                JOptionPane.INFORMATION_MESSAGE);
                     }
 
                 }
             });
 
-            
-            
+            this.btRename = new JButton(new AbstractAction("a.b.c") {
+
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String name = JOptionPane.showInputDialog("New name of dataset :");
+                    if (name != null && !name.isEmpty()) {
+                        Dataset selectedDataset = (Dataset) combo.getSelectedItem();
+                        selectedDataset.setName(name);
+                        fillDataset();
+                        cycle.updateObservateur("Dataset");
+                    }
+
+                }
+            });
+
             gbc.gridx = 0;
             gbc.gridy = 0;
-            gbc.gridwidth =1;
+            gbc.gridwidth = 1;
             btAdd.setToolTipText("Add a dataset");
             add(this.btAdd, gbc);
-            
+
             gbc.gridx = 1;
             gbc.gridy = 0;
-            gbc.gridwidth =1;
+            gbc.gridwidth = 1;
             btDel.setToolTipText("Remove this dataset");
             add(this.btDel, gbc);
-            
+
+            gbc.gridx = 2;
+            gbc.gridy = 0;
+            gbc.gridwidth = 1;
+            btRename.setToolTipText("Rename this dataset");
+            add(this.btRename, gbc);
+
             gbc.gridx = 0;
             gbc.gridy = 1;
-            gbc.gridwidth = 2;
+            gbc.gridwidth = 3;
             gbc.fill = GridBagConstraints.HORIZONTAL;
             add(this.combo, gbc);
         }

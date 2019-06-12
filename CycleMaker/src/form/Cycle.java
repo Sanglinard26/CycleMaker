@@ -221,15 +221,14 @@ public final class Cycle implements Observable, Serializable {
     }
 
     public final double getTotalTime() {
-    	
-    	this.baseTime.grow();
+
+        this.baseTime.grow();
         int nbPoint = Integer.MAX_VALUE;
-        for(Dataset dataset : this.getDatasets())
-        {
-        	nbPoint = Math.min(nbPoint, dataset.getNbPoint());
+        for (Dataset dataset : this.getDatasets()) {
+            nbPoint = Math.min(nbPoint, dataset.getNbPoint());
         }
         if (nbPoint > 0) {
-            return this.baseTime.get(nbPoint-1);
+            return this.baseTime.get(nbPoint - 1);
         }
         return 0;
     }
@@ -291,6 +290,19 @@ public final class Cycle implements Observable, Serializable {
             thisElement.setT1(this.baseTime.get(thisElement.getFirstIndex()));
             thisElement.setT2(this.baseTime.get(thisElement.getLastIndex()));
 
+        }
+
+        for (int i = form.firstIndex; i <= form.lastIndex; i++) {
+            double oldValue = dataset.datas.get(i);
+            dataset.datas.set(i, oldValue + removeAmplitude);
+        }
+
+        double lastValueForm = dataset.datas.get(form.lastIndex);
+        double diff = lastValueForm - dataset.datas.get(form.lastIndex + 1);
+
+        for (int i = form.lastIndex + 1; i <= dataset.datas.size() - 1; i++) {
+            double oldValue = dataset.datas.get(i);
+            dataset.datas.set(i, oldValue + diff);
         }
 
         updateObservateur("Chart");
@@ -366,19 +378,23 @@ public final class Cycle implements Observable, Serializable {
             }
         }
 
-        public String getName() {
+        public final void setName(String newName) {
+            this.name = newName;
+        }
+
+        public final String getName() {
             return name;
         }
 
-        public List<Double> getDatas() {
+        public final List<Double> getDatas() {
             return datas;
         }
 
-        public int getNbPoint() {
+        public final int getNbPoint() {
             return datas.size();
         }
 
-        public List<Element> getElements() {
+        public final List<Element> getElements() {
             return elements;
         }
 
