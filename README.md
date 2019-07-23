@@ -1,0 +1,2 @@
+# CycleMaker
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/357108af950b449c9e446537db60b712)](https://app.codacy.com/app/Sanglinard26/CycleMaker?utm_source=github.com&utm_medium=referral&utm_content=Sanglinard26/CycleMaker&utm_campaign=Badge_Grade_Dashboard)
