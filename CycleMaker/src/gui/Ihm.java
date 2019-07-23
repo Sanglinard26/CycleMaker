@@ -70,6 +70,7 @@ public final class Ihm extends JFrame implements Observateur {
     private static final long serialVersionUID = 1L;
 
     private static final String APP_ICON = "/app_icon_32.png";
+    private static final String MANUAL_ICON = "/manual_icon_16.png";
     private static final String CONTACT_ICON = "/contact_icon_16.png";
     private static final String NEWS_ICON = "/new_icon_16.png";
 
@@ -364,6 +365,18 @@ public final class Ihm extends JFrame implements Observateur {
         menuBar.add(menu);
 
         menu = new JMenu("Help");
+        menuItem = new JMenuItem(new AbstractAction("User manual", new ImageIcon(getClass().getResource(MANUAL_ICON))) {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed(ActionEvent paramActionEvent) {
+                new DialManual(Ihm.this);
+
+            }
+        });
+        menu.add(menuItem);
+
         menuItem = new JMenuItem(new AbstractAction("Contact", new ImageIcon(getClass().getResource(CONTACT_ICON))) {
 
             private static final long serialVersionUID = 1L;
