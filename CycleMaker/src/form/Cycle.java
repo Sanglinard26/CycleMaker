@@ -83,9 +83,9 @@ public final class Cycle implements Observable, Serializable {
 
                     for (int idxCol = 0; idxCol < splitLine.length; idxCol++) {
                         if (idxCol == 0) {
-                            this.baseTime.add(Double.parseDouble(splitLine[idxCol].trim()));
+                            this.baseTime.add(Float.parseFloat(splitLine[idxCol].trim()));
                         } else {
-                            this.datasets.get(idxCol - 1).addData(Double.parseDouble(splitLine[idxCol].trim()));
+                            this.datasets.get(idxCol - 1).addData(Float.parseFloat(splitLine[idxCol].trim()));
                         }
 
                     }
@@ -253,7 +253,7 @@ public final class Cycle implements Observable, Serializable {
         form.setT1(this.baseTime.get(form.getFirstIndex()));
         form.setT2(this.baseTime.get(form.getLastIndex()));
 
-        updateObservateur("Chart");
+        // updateObservateur("Chart");
     }
 
     public final void addElementToDataset(Dataset dataset, int position, Element form) {
@@ -261,13 +261,13 @@ public final class Cycle implements Observable, Serializable {
         final Element previousElement = dataset.getElements().get(position - 2); // -2 car c'est une position en base 1 qui entre dans la méthode
         int lastIdxPrev = previousElement.getLastIndex();
 
-        final double removeAmplitude = dataset.getDatas().get(previousElement.getLastIndex()) - dataset.getDatas().get(form.getFirstIndex());
+        final float removeAmplitude = dataset.getDatas().get(previousElement.getLastIndex()) - dataset.getDatas().get(form.getFirstIndex());
 
         dataset.addElement(position, form);
 
         this.baseTime.grow();
 
-        List<Double> moveDatas = new ArrayList<Double>();
+        List<Float> moveDatas = new ArrayList<Float>();
 
         for (int nData = dataset.getElements().get(position - 1).getLastIndex(); nData >= dataset.getElements().get(position - 1)
                 .getFirstIndex(); nData--) {
@@ -293,32 +293,32 @@ public final class Cycle implements Observable, Serializable {
         }
 
         for (int i = form.firstIndex; i <= form.lastIndex; i++) {
-            double oldValue = dataset.datas.get(i);
+            float oldValue = dataset.datas.get(i);
             dataset.datas.set(i, oldValue + removeAmplitude);
         }
 
-        double lastValueForm = dataset.datas.get(form.lastIndex);
-        double diff = lastValueForm - dataset.datas.get(form.lastIndex + 1);
+        float lastValueForm = dataset.datas.get(form.lastIndex);
+        float diff = lastValueForm - dataset.datas.get(form.lastIndex + 1);
 
         for (int i = form.lastIndex + 1; i <= dataset.datas.size() - 1; i++) {
-            double oldValue = dataset.datas.get(i);
+            float oldValue = dataset.datas.get(i);
             dataset.datas.set(i, oldValue + diff);
         }
 
-        updateObservateur("Chart");
+        // updateObservateur("Chart");
     }
 
     public final void removeElementFromDataset(Dataset dataset, Element form) {
 
         final int idx1 = form.getFirstIndex();
         final int idx2 = form.getLastIndex();
-        final double removeAmplitude = form.diffEndFromBeginValue();
+        final float removeAmplitude = form.diffEndFromBeginValue();
         final int removeNbPoint = form.getNbPoint();
 
         dataset.removeElement(form);
 
         for (int i = idx1; i < dataset.getDatas().size(); i++) {
-            double value = dataset.getDatas().get(i);
+            float value = dataset.getDatas().get(i);
             dataset.getDatas().set(i, value - removeAmplitude);
         }
 
@@ -337,7 +337,7 @@ public final class Cycle implements Observable, Serializable {
 
         }
 
-        updateObservateur("Chart");
+        // updateObservateur("Chart");
     }
 
     public final class Dataset implements Serializable {
@@ -345,16 +345,16 @@ public final class Cycle implements Observable, Serializable {
         private static final long serialVersionUID = 1L;
 
         private String name;
-        private List<Double> datas;
+        private List<Float> datas;
         private List<Element> elements;
 
         public Dataset(String name) {
             this.name = name;
-            this.datas = new ArrayList<Double>();
+            this.datas = new ArrayList<Float>();
             this.elements = new ArrayList<Element>();
         }
 
-        public final void addData(Double data) {
+        public final void addData(Float data) {
             this.datas.add(data);
         }
 
@@ -386,7 +386,7 @@ public final class Cycle implements Observable, Serializable {
             return name;
         }
 
-        public final List<Double> getDatas() {
+        public final List<Float> getDatas() {
             return datas;
         }
 
@@ -409,7 +409,7 @@ public final class Cycle implements Observable, Serializable {
         }
     }
 
-    public final class Time extends ArrayList<Double> {
+    public final class Time extends ArrayList<Float> {
 
         private static final long serialVersionUID = 1L;
 
@@ -423,7 +423,7 @@ public final class Cycle implements Observable, Serializable {
             int diffPoint = 0;
 
             if (isEmpty()) {
-                add(0d);
+                add(0f);
             }
 
             for (Dataset dataset : datasets) {

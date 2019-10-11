@@ -9,7 +9,7 @@ public final class Stationnaire extends Element {
 
     private static final long serialVersionUID = 1L;
 
-    public Stationnaire(Dataset dataset, double duration) {
+    public Stationnaire(Dataset dataset, float duration) {
 
         this.duration = duration;
         this.amplitude = 0;
@@ -33,7 +33,7 @@ public final class Stationnaire extends Element {
     }
 
     @Override
-    public double diffEndFromBeginValue() {
+    public float diffEndFromBeginValue() {
         return 0;
     }
 

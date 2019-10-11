@@ -9,13 +9,13 @@ public final class Rampe extends Element {
 
     private static final long serialVersionUID = 1L;
 
-    public Rampe(Dataset dataset, double duration, double amplitude) {
+    public Rampe(Dataset dataset, float duration, float amplitude) {
 
         this.duration = duration;
         this.amplitude = amplitude;
 
         final int nPoint = (int) (this.duration / te);
-        final double gradient = this.amplitude / nPoint;
+        final float gradient = this.amplitude / nPoint;
 
         if (!dataset.getDatas().isEmpty()) {
             this.firstIndex = dataset.getDatas().size();
@@ -34,7 +34,7 @@ public final class Rampe extends Element {
     }
 
     @Override
-    public double diffEndFromBeginValue() {
+    public float diffEndFromBeginValue() {
         return this.amplitude;
     }
 

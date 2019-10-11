@@ -9,7 +9,7 @@ public final class Creneau extends Element {
 
     private static final long serialVersionUID = 1L;
 
-    public Creneau(Dataset dataset, double duration, double amplitude) {
+    public Creneau(Dataset dataset, float duration, float amplitude) {
 
         this.duration = duration;
         this.amplitude = amplitude;
@@ -37,7 +37,7 @@ public final class Creneau extends Element {
     }
 
     @Override
-    public double diffEndFromBeginValue() {
+    public float diffEndFromBeginValue() {
         return this.amplitude;
     }
 

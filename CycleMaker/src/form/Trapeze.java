@@ -9,13 +9,13 @@ public final class Trapeze extends Element {
 
     private static final long serialVersionUID = 1L;
 
-    public Trapeze(Dataset dataset, double duration, double tpsRampe, double amplitude) {
+    public Trapeze(Dataset dataset, float duration, float tpsRampe, float amplitude) {
 
         this.duration = duration;
         this.amplitude = amplitude;
 
-        final double tPlateau = this.duration - (tpsRampe * 2);
-        final double gradient = this.amplitude / (tpsRampe / te);
+        final float tPlateau = this.duration - (tpsRampe * 2);
+        final float gradient = this.amplitude / (tpsRampe / te);
 
         final int nPoint = (int) (this.duration / te);
         final int nPointPlateau = (int) (tPlateau / te);
@@ -46,7 +46,7 @@ public final class Trapeze extends Element {
     }
 
     @Override
-    public double diffEndFromBeginValue() {
+    public float diffEndFromBeginValue() {
         return 0;
     }
 

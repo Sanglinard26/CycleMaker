@@ -9,7 +9,7 @@ public final class Point extends Element {
 
     private static final long serialVersionUID = 1L;
 
-    public Point(Dataset dataset, double value) {
+    public Point(Dataset dataset, float value) {
 
         this.duration = 0;
         this.amplitude = 0;
@@ -22,7 +22,7 @@ public final class Point extends Element {
     }
 
     @Override
-    public double diffEndFromBeginValue() {
+    public float diffEndFromBeginValue() {
         return 0;
     }
 

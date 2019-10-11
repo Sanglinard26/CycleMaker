@@ -13,7 +13,7 @@ public final class Base extends Element {
     public Base(Time time, Dataset dataset) {
 
         this.duration = time.get(time.size() - 1);
-        this.amplitude = Double.NEGATIVE_INFINITY;
+        this.amplitude = Float.NEGATIVE_INFINITY;
 
         this.firstIndex = 0;
         this.lastIndex = time.size() - 1;
@@ -21,13 +21,13 @@ public final class Base extends Element {
         this.t1 = 0;
         this.t2 = time.get(lastIndex);
 
-        for (double value : dataset.getDatas()) {
+        for (float value : dataset.getDatas()) {
             this.amplitude = Math.max(amplitude, value);
         }
     }
 
     @Override
-    public double diffEndFromBeginValue() {
+    public float diffEndFromBeginValue() {
         return 0;
     }
 

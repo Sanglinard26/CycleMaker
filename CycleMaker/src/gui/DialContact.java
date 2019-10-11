@@ -44,7 +44,7 @@ public final class DialContact extends JDialog {
             }
         });
         txtContact.setText("Kevin RAILLON" + "<br> Entity : DCTC/IVCT/T3C/TCPA </br>" + "<br> Tel : 301479 </br>"
-                + "<br> Bugs or improvements ==> <a href='mailto:kevin.raillon1@mpsa.com'>Envoyer e-mail </br>");
+                + "<br> Bugs or improvements ==> <a href='mailto:kevin.raillon1@mpsa.com'>Send e-mail </br>");
 
         add(txtContact);
 

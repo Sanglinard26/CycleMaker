@@ -162,6 +162,7 @@ public final class PanelCreation extends JPanel {
                             modelElement.removeElement(selectedIdx[nElement]);
 
                         }
+                        cycle.updateObservateur("Chart");
                     }
                 }
             }
@@ -183,30 +184,30 @@ public final class PanelCreation extends JPanel {
                         final Dataset grandeur = cycle.getDataset(comBoDataset.getSelectedDataset().getName());
 
                         int cnt = 1;
-                        double nbRepet = getDoubleValue(txtNbRepetition.getText());
+                        double nbRepet = getFloatValue(txtNbRepetition.getText());
 
                         if (selectedForm != null) {
                             do {
 
                                 switch (selectedForm) {
                                 case Element.POINT:
-                                    newElement = new Point(grandeur, getDoubleValue(txtValue.getText()));
+                                    newElement = new Point(grandeur, getFloatValue(txtValue.getText()));
                                     break;
                                 case Element.CRENEAU:
-                                    newElement = new Creneau(grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
+                                    newElement = new Creneau(grandeur, getFloatValue(txtDuration.getText()), getFloatValue(txtAmplitude.getText()));
                                     break;
                                 case Element.STATIONNAIRE:
-                                    newElement = new Stationnaire(grandeur, getDoubleValue(txtDuration.getText()));
+                                    newElement = new Stationnaire(grandeur, getFloatValue(txtDuration.getText()));
                                     break;
                                 case Element.RAMPE:
-                                    newElement = new Rampe(grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtAmplitude.getText()));
+                                    newElement = new Rampe(grandeur, getFloatValue(txtDuration.getText()), getFloatValue(txtAmplitude.getText()));
                                     break;
                                 case Element.SINUS:
-                                    newElement = new Sinus(grandeur, getDoubleValue(txtAmplitude.getText()), getDoubleValue(txtFrequence.getText()));
+                                    newElement = new Sinus(grandeur, getFloatValue(txtAmplitude.getText()), getFloatValue(txtFrequence.getText()));
                                     break;
                                 case Element.TRAPEZE:
-                                    newElement = new Trapeze(grandeur, getDoubleValue(txtDuration.getText()), getDoubleValue(txtTpsRampe.getText()),
-                                            getDoubleValue(txtAmplitude.getText()));
+                                    newElement = new Trapeze(grandeur, getFloatValue(txtDuration.getText()), getFloatValue(txtTpsRampe.getText()),
+                                            getFloatValue(txtAmplitude.getText()));
                                     break;
                                 default:
                                     break;
@@ -239,6 +240,8 @@ public final class PanelCreation extends JPanel {
 
                                 cnt++;
                             } while (cnt <= Math.max(1, nbRepet));
+
+                            cycle.updateObservateur("Chart");
                         }
 
                     }
@@ -284,6 +287,8 @@ public final class PanelCreation extends JPanel {
                         modelElement.removeElement(selectedIdx[nElement]);
 
                     }
+
+                    cycle.updateObservateur("Chart");
                 }
 
             }
@@ -581,15 +586,15 @@ public final class PanelCreation extends JPanel {
 
     }
 
-    private final double getDoubleValue(String txt) {
+    private final Float getFloatValue(String txt) {
         if (!txt.isEmpty()) {
             try {
-                return Double.parseDouble(txt);
+                return Float.parseFloat(txt);
             } catch (NumberFormatException nbf) {
-                return 0d;
+                return 0f;
             }
         }
-        return 0d;
+        return 0f;
     }
 
     public final void setCycle(Cycle cycle) {
@@ -719,7 +724,7 @@ public final class PanelCreation extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     String name = JOptionPane.showInputDialog("New name of dataset :");
-                    if (name != null && !name.isEmpty()) {
+                    if (name != null && !name.trim().isEmpty()) {
                         Dataset selectedDataset = (Dataset) combo.getSelectedItem();
                         selectedDataset.setName(name);
                         fillDataset();

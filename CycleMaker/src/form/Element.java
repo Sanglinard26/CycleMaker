@@ -24,14 +24,14 @@ public abstract class Element implements Serializable {
     public static final String ICON_SINUS = "/icon_sinus_200.png";
     public static final String ICON_TRAPEZE = "/icon_trapeze_200.png";
 
-    public static final double te = 0.1;
+    public static final float te = 0.1f;
 
     protected int firstIndex, lastIndex;
-    protected double t1, t2;
+    protected float t1, t2;
     protected int nbPoint;
     protected int position;
-    protected double duration;
-    protected double amplitude;
+    protected float duration;
+    protected float amplitude;
 
     public int getPosition() {
         return position;
@@ -49,9 +49,9 @@ public abstract class Element implements Serializable {
         return amplitude;
     }
 
-    public abstract double diffEndFromBeginValue();
+    public abstract float diffEndFromBeginValue();
 
-    public void setAmplitude(double amplitude) {
+    public void setAmplitude(float amplitude) {
         this.amplitude = amplitude;
     }
 
@@ -83,11 +83,11 @@ public abstract class Element implements Serializable {
         this.lastIndex = lastIndex;
     }
 
-    public void setT1(double t1) {
+    public void setT1(float t1) {
         this.t1 = t1;
     }
 
-    public void setT2(double t2) {
+    public void setT2(float t2) {
         this.t2 = t2;
     }
 
